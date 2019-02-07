@@ -9,8 +9,8 @@ import io.ktor.routing.Routing
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 import io.ktor.websocket.WebSockets
-import service.UserService
 import resource.user
+import service.UserService
 
 fun Application.module() {
     install(DefaultHeaders)
