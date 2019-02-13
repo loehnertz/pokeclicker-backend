@@ -72,7 +72,7 @@
             <version>3.3.0</version>
         </dependency>
 
-        <!--3rd party-->
+        <!--3rd party stuff-->
         <dependency>
             <groupId>me.sargunvohra.lib</groupId>
             <artifactId>pokekotlin</artifactId>
