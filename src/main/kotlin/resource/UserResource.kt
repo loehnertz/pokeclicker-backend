@@ -9,7 +9,6 @@ import io.ktor.routing.get
 import io.ktor.routing.route
 import service.UserService
 
-
 fun Route.user(userService: UserService) {
     route("/users") {
         get("/") {
