@@ -41,8 +41,8 @@ fun Application.module() {
 
 fun getRandomPkmn(): PokemonSpecies {
     val pokeApi = PokeApiClient()
-    val randomInt = (1..807).random()
-    return pokeApi.getPokemonSpecies(randomInt)
+    val randInt = (1..807).random()
+    return pokeApi.getPokemonSpecies(randInt)
 }
 
 fun main() {
