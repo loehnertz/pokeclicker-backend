@@ -27,3 +27,6 @@ hs_err_pid*
 
 # JetBrains IDEA directory
 /.idea/
+
+# iml files
+pockeclicker.iml
