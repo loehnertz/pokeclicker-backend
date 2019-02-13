@@ -10,6 +10,7 @@ import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 import io.ktor.websocket.WebSockets
 import resource.user
+import service.DatabaseFactory
 import service.UserService
 
 fun Application.module() {
@@ -23,7 +24,7 @@ fun Application.module() {
         }
     }
 
-    // DatabaseFactory.init()
+    DatabaseFactory.init()
 
     val userService = UserService()
 
