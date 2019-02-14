@@ -28,6 +28,11 @@ hs_err_pid*
 # JetBrains IDEA directory
 /.idea/
 
+# Eclipse stuff
+/.settings
+.classpath
+.project
+
 # Environment variables
 .env
 secrets
