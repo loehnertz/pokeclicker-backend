@@ -1,3 +1,5 @@
+package main
+
 import com.fasterxml.jackson.databind.SerializationFeature
 import io.ktor.application.Application
 import io.ktor.application.install
@@ -10,6 +12,7 @@ import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 import io.ktor.websocket.WebSockets
 import resource.user
+import service.DatabaseFactory
 import service.UserService
 
 import me.sargunvohra.lib.pokekotlin.client.PokeApiClient
@@ -27,7 +30,7 @@ fun Application.module() {
         }
     }
 
-    // DatabaseFactory.init()
+    DatabaseFactory.init()
 
     val userService = UserService()
 
