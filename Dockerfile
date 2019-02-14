@@ -8,7 +8,7 @@ RUN chown -R $APPLICATION_USER /app
 
 USER $APPLICATION_USER
 
-COPY ./pokeclicker-1.0-SNAPSHOT-jar-with-dependencies.jar /app/pokeclicker-backend.jar
+COPY ./target/pokeclicker-1.0-SNAPSHOT-jar-with-dependencies.jar /app/pokeclicker-backend.jar
 COPY ./secrets /app/secrets
 WORKDIR /app
 
