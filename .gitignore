@@ -30,3 +30,12 @@ hs_err_pid*
 
 # iml files
 pockeclicker.iml
+
+# Eclipse stuff
+/.settings
+.classpath
+.project
+
+# Environment variables
+.env
+secrets
