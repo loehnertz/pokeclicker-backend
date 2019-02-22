@@ -12,9 +12,6 @@ import io.ktor.websocket.WebSockets
 import resource.user
 import service.UserService
 
-import me.sargunvohra.lib.pokekotlin.client.PokeApiClient
-import me.sargunvohra.lib.pokekotlin.model.PokemonSpecies
-
 
 fun Application.module() {
     install(DefaultHeaders)
@@ -36,15 +33,7 @@ fun Application.module() {
     }
 }
 
-fun getRandomPkmn(): PokemonSpecies {
-    val pokeApi = PokeApiClient()
-    val randInt = (1..807).random()
-    return pokeApi.getPokemonSpecies(randInt)
-}
 
 fun main() {
     embeddedServer(Netty, 8080, watchPaths = listOf("MainKt"), module = Application::module).start()
-
-    val pkmn = getRandomPkmn()
-    println(pkmn.name)
 }
