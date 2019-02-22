@@ -76,6 +76,13 @@
             <artifactId>exposed</artifactId>
             <version>0.12.1</version>
         </dependency>
+
+        <dependency>
+            <groupId>me.sargunvohra.lib</groupId>
+            <artifactId>pokekotlin</artifactId>
+            <version>2.3.0</version>
+            <type>jar</type>
+        </dependency>
     </dependencies>
 
     <build>

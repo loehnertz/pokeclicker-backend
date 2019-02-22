@@ -15,7 +15,9 @@ import resource.user
 import service.DatabaseFactory
 import service.UserService
 
+import PokeApiAdapter
 import me.sargunvohra.lib.pokekotlin.client.PokeApiClient
+import me.sargunvohra.lib.pokekotlin.model.Pokemon
 import me.sargunvohra.lib.pokekotlin.model.PokemonSpecies
 
 
@@ -39,15 +41,18 @@ fun Application.module() {
     }
 }
 
-fun getRandomPkmn(): PokemonSpecies {
+fun getRandomPkmn(): String {
     val pokeApi = PokeApiClient()
     val randInt = (1..807).random()
-    return pokeApi.getPokemonSpecies(randInt)
+    return pokeApi.getPokemonSpecies(randInt).name
 }
 
 fun main() {
     embeddedServer(Netty, 8080, watchPaths = listOf("MainKt"), module = Application::module).start()
 
     val pkmn = getRandomPkmn()
-    println(pkmn.name)
+    println("Random Pokemon:$pkmn")
+
+    val pkmnInfo = PokeApiAdapter().getPkmnData(1)
+    println("First Pokemon in database::${pkmnInfo.apiInfo.name}")
 }
