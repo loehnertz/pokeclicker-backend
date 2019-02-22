@@ -77,6 +77,7 @@
             <artifactId>pokekotlin</artifactId>
             <version>2.3.0</version>
             <type>jar</type>
+        </dependency>
         <dependency>
             <groupId>org.jetbrains.exposed</groupId>
             <artifactId>exposed</artifactId>
