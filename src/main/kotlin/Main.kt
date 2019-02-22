@@ -15,6 +15,7 @@ import resource.user
 import service.DatabaseFactory
 import service.UserService
 
+
 fun Application.module() {
     install(DefaultHeaders)
     install(CallLogging)
@@ -34,6 +35,7 @@ fun Application.module() {
         user(userService)
     }
 }
+
 
 fun main() {
     embeddedServer(Netty, 8080, watchPaths = listOf("MainKt"), module = Application::module).start()
