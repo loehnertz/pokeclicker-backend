@@ -12,6 +12,7 @@ import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 import io.ktor.websocket.WebSockets
 import resource.user
+import PokeApiAdapter
 import service.DatabaseFactory
 import service.UserService
 
