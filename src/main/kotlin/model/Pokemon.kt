@@ -1,5 +1,3 @@
-@file:Suppress("unused")
-
 package model
 
 import org.jetbrains.exposed.sql.ReferenceOption
@@ -20,15 +18,17 @@ data class Pokemon(
     val pokeNumber: Int,
     val owner: User?,
     val xp: Int,
-    val aquisitionDateTime: DateTime
+    val aquisitionDateTime: DateTime,
+    var apiInfo: me.sargunvohra.lib.pokekotlin.model.Pokemon?
 )
 
 fun Pokemons.toPokemon(row: ResultRow): Pokemon {
     return Pokemon(
         id = row[Pokemons.id],
         pokeNumber = row[Pokemons.pokeNumber],
-        owner = null,
+        owner = Users.getUser(row[Pokemons.owner]),
         xp = row[Pokemons.xp],
-        aquisitionDateTime = row[Pokemons.aquisitionDateTime]
+        aquisitionDateTime = row[Pokemons.aquisitionDateTime],
+        apiInfo = null
     )
 }
