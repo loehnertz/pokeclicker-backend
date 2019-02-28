@@ -11,10 +11,11 @@ import io.ktor.routing.Routing
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 import io.ktor.websocket.WebSockets
+import resource.store
 import resource.user
-import service.DatabaseFactory
+import service.StoreService
 import service.UserService
-
+import utility.DatabaseFactory
 
 fun Application.module() {
     install(DefaultHeaders)
@@ -29,13 +30,11 @@ fun Application.module() {
 
     DatabaseFactory.init()
 
-    val userService = UserService()
-
     install(Routing) {
-        user(userService)
+        user(UserService())
+        store(StoreService())
     }
 }
-
 
 fun main() {
     embeddedServer(Netty, 8080, watchPaths = listOf("MainKt"), module = Application::module).start()
