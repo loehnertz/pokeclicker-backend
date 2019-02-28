@@ -1,24 +1,22 @@
 package service
 
-import com.google.gson.Gson
-import me.sargunvohra.lib.pokekotlin.client.PokeApiClient
-import me.sargunvohra.lib.pokekotlin.model.LocationArea
-import model.Boosterpack
-import redis.clients.jedis.Jedis
+import me.sargunvohra.lib.pokekotlin.model.Pokemon
+import me.sargunvohra.lib.pokekotlin.model.PokemonEncounter
+import model.*
+import org.jetbrains.exposed.sql.insert
+import org.jetbrains.exposed.sql.transactions.transaction
+import org.joda.time.DateTime
+import utility.PokeApi
 
-const val RedisHashMapKey = "locationAreas"
+const val BoosterpackSize = 5
 
 class StoreService {
-    private val gson = Gson()
-    private val pokeApi = PokeApiClient()
-    private var redis = Jedis("localhost")
-
     fun getAllBoosterpacks(): List<Boosterpack> {
-        val locationAreas = pokeApi.getLocationAreaList(0, 100).results.map { getLocationArea(it.id) }
+        val locationAreas = PokeApi.client.getLocationAreaList(0, 55).results.map { PokeApi.getLocationArea(it.id) }
 
         return locationAreas.map {
             Boosterpack(
-                name = convertLocationName(it.name),
+                name = capitalizeLocationName(it.name),
                 price = determineBoosterpackPrice(it.gameIndex),
                 locationAreaId = it.id,
                 hexColor = determineHexColorBasedOnLocationName(it.gameIndex)
@@ -26,20 +24,77 @@ class StoreService {
         }
     }
 
-    private fun getLocationArea(id: Int): LocationArea {
-        val cachedValue = redis.hmget(RedisHashMapKey, id.toString()).firstOrNull()
-        if (cachedValue != null) {
-            return gson.fromJson(cachedValue, LocationArea::class.java)
-        }
+    fun getSpecificBoosterpack(id: Int): Boosterpack {
+        val locationArea = PokeApi.getLocationArea(id)
 
-        val locationArea = pokeApi.getLocationArea(id)
-
-        redis.hmset(RedisHashMapKey, mapOf(id.toString() to gson.toJson(locationArea)))
-
-        return locationArea
+        return Boosterpack(
+            name = capitalizeLocationName(locationArea.name),
+            price = determineBoosterpackPrice(locationArea.gameIndex),
+            locationAreaId = locationArea.id,
+            hexColor = determineHexColorBasedOnLocationName(locationArea.gameIndex)
+        )
     }
 
-    private fun convertLocationName(locationName: String): String {
+    fun buyBoosterpack(boosterpackId: Int, userId: Int): List<model.Pokemon> {
+        // Get the user object out of the database
+        val user = Users.getUser(userId)
+
+        // Retrieve the information necessary to open a new boosterpack
+        val boosterpack = getSpecificBoosterpack(boosterpackId)
+        val locationArea = PokeApi.getLocationArea(boosterpackId)
+
+        // Check if user has enough money
+        if (user.pokeDollars < boosterpack.price) throw Exception("User does not own enough PokéDollars")
+
+        // Open the booster pack
+        val receivedPokemons = openBoosterpack(locationArea.pokemonEncounters)
+
+        // Insert the received Pokemon into the database
+        val insertedPokemons = insertReceivedPokemon(receivedPokemons, user)
+
+        // Subtract the booster pack price from the user's account balance
+        Users.subtractPokeDollarsFromBalance(user.id, boosterpack.price)
+
+        return insertedPokemons
+    }
+
+    private fun openBoosterpack(pokemonEncounters: List<PokemonEncounter>): List<Pokemon> {
+        val pokemons = pokemonEncounters.map { PokeApi.getPokemon(it.pokemon.id) }.sortedBy { it.baseExperience }.asReversed()
+
+        val possiblePokemons = arrayListOf<Pokemon>()
+        pokemons.forEachIndexed { index, pokemon -> repeat(index + 1) { possiblePokemons.add(pokemon) } }
+
+        return possiblePokemons.shuffled().take(BoosterpackSize)
+    }
+
+    private fun insertReceivedPokemon(drawnPokemons: List<Pokemon>, user: User): List<model.Pokemon> {
+        val receivedPokemons = arrayListOf<model.Pokemon>()
+
+        transaction {
+            for (pokemon in drawnPokemons) {
+                val insertedPokemon = Pokemons.insert {
+                    it[pokeNumber] = pokemon.id
+                    it[owner] = user.id
+                    it[xp] = pokemon.baseExperience
+                    it[aquisitionDateTime] = DateTime.now()
+                }
+
+                receivedPokemons.add(
+                    Pokemon(
+                        id = insertedPokemon.resultedValues!!.first()[Pokemons.id],
+                        pokeNumber = pokemon.id,
+                        owner = user,
+                        xp = pokemon.baseExperience,
+                        aquisitionDateTime = DateTime()
+                    )
+                )
+            }
+        }
+
+        return receivedPokemons
+    }
+
+    private fun capitalizeLocationName(locationName: String): String {
         return locationName.split("-").joinToString(" ") { it.capitalize() }
     }
 
