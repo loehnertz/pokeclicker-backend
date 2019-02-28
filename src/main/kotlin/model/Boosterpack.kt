@@ -1,8 +1,8 @@
 package model
 
 data class Boosterpack(
+    val locationAreaId: Int,
     val name: String,
     val price: Long,
-    val locationAreaId: Int,
     val hexColor: String
 )
