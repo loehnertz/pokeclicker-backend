@@ -30,7 +30,7 @@ fun Application.module() {
 
     install(Sessions) {
         cookie<Session>("oauthSampleSessionId") {
-            val secretSignKey = hex("000102030405060708090a0b0c0d0e0f") // @TODO: Remember to change this!
+            val secretSignKey = hex(System.getenv("pokeclicker_session_key"))
             transform(SessionTransportTransformerMessageAuthentication(secretSignKey))
         }
     }
