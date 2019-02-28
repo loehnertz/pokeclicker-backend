@@ -16,7 +16,5 @@ fun Route.user(userService: UserService) {
         }
     }
 
-    val mapper = jacksonObjectMapper().apply {
-        setSerializationInclusion(JsonInclude.Include.NON_NULL)
-    }
+    val mapper = jacksonObjectMapper().apply { setSerializationInclusion(JsonInclude.Include.NON_NULL) }
 }
