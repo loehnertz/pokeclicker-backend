@@ -1,5 +1,6 @@
 package service
 
+import io.ktor.features.BadRequestException
 import me.sargunvohra.lib.pokekotlin.model.Pokemon
 import me.sargunvohra.lib.pokekotlin.model.PokemonEncounter
 import model.*
@@ -12,16 +13,9 @@ const val BoosterpackSize = 5
 
 class StoreService {
     fun getAllBoosterpacks(): List<Boosterpack> {
-        val locationAreas = PokeApi.client.getLocationAreaList(0, 55).results.map { PokeApi.getLocationArea(it.id) }
+        val locationAreas = PokeApi.client.getLocationAreaList(0, 55).results
 
-        return locationAreas.map {
-            Boosterpack(
-                name = capitalizeLocationName(it.name),
-                price = determineBoosterpackPrice(it.gameIndex),
-                locationAreaId = it.id,
-                hexColor = determineHexColorBasedOnLocationName(it.gameIndex)
-            )
-        }
+        return locationAreas.map { getSpecificBoosterpack(it.id) }
     }
 
     fun getSpecificBoosterpack(id: Int): Boosterpack {
@@ -44,7 +38,7 @@ class StoreService {
         val locationArea = PokeApi.getLocationArea(boosterpackId)
 
         // Check if user has enough money
-        if (user.pokeDollars < boosterpack.price) throw Exception("User does not own enough PokéDollars")
+        if (user.pokeDollars < boosterpack.price) throw BadRequestException("User does not own enough PokéDollars")
 
         // Open the booster pack
         val receivedPokemons = openBoosterpack(locationArea.pokemonEncounters)

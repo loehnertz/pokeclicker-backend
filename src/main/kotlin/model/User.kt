@@ -2,6 +2,7 @@
 
 package model
 
+import io.ktor.features.NotFoundException
 import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.select
@@ -35,7 +36,7 @@ fun Users.getUser(userId: Int): User {
     return Users.toUser(
         transaction {
             Users.select { Users.id eq userId }.firstOrNull()
-        } ?: throw Exception("No user with ID '$userId' exists")
+        } ?: throw NotFoundException("No user with ID '$userId' exists")
     )
 }
 

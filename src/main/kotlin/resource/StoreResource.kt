@@ -17,22 +17,14 @@ fun Route.store(storeService: StoreService) {
     route("/store") {
         route("/boosterpacks") {
             get("/") {
-                try {
-                    call.respond(storeService.getAllBoosterpacks())
-                } catch (e: Exception) {
-                    call.respond(HttpStatusCode.BadRequest, e.localizedMessage)
-                }
+                call.respond(storeService.getAllBoosterpacks())
             }
 
             get("/{id}") {
                 val boosterpackId = call.parameters["id"]
 
                 if (boosterpackId != null) {
-                    try {
-                        call.respond(storeService.getSpecificBoosterpack(boosterpackId.toInt()))
-                    } catch (e: Exception) {
-                        call.respond(HttpStatusCode.BadRequest, e.localizedMessage)
-                    }
+                    call.respond(storeService.getSpecificBoosterpack(boosterpackId.toInt()))
                 } else {
                     call.respond("No ID was specified")
                 }
@@ -45,16 +37,12 @@ fun Route.store(storeService: StoreService) {
 
                 if (boosterpackId != null) {
                     if (session != null) {
-                        try {
-                            call.respond(storeService.buyBoosterpack(boosterpackId.toInt(), session.userId.toInt()))
-                        } catch (e: Exception) {
-                            call.respond(HttpStatusCode.BadRequest, e.localizedMessage)
-                        }
+                        call.respond(storeService.buyBoosterpack(boosterpackId.toInt(), session.userId.toInt()))
                     } else {
                         call.respond(HttpStatusCode.Unauthorized, "You are not logged in at the moment")
                     }
                 } else {
-                    call.respond("No ID was specified")
+                    call.respond(HttpStatusCode.BadRequest, "No ID was specified")
                 }
             }
         }
