@@ -17,14 +17,22 @@ fun Route.store(storeService: StoreService) {
     route("/store") {
         route("/boosterpacks") {
             get("/") {
-                call.respond(storeService.getAllBoosterpacks())
+                try {
+                    call.respond(storeService.getAllBoosterpacks())
+                } catch (e: Exception) {
+                    call.respond(HttpStatusCode.BadRequest, e.localizedMessage)
+                }
             }
 
             get("/{id}") {
                 val boosterpackId = call.parameters["id"]
 
                 if (boosterpackId != null) {
-                    call.respond(storeService.getSpecificBoosterpack(boosterpackId.toInt()))
+                    try {
+                        call.respond(storeService.getSpecificBoosterpack(boosterpackId.toInt()))
+                    } catch (e: Exception) {
+                        call.respond(HttpStatusCode.BadRequest, e.localizedMessage)
+                    }
                 } else {
                     call.respond("No ID was specified")
                 }
