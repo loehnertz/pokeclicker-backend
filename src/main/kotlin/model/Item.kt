@@ -16,15 +16,16 @@ data class Item(
     val id: Int,
     val itemNumber: Int,
     val owner: User?,
-    val aquisitionDateTime: DateTime
+    val aquisitionDateTime: DateTime,
+    var apiInfo: me.sargunvohra.lib.pokekotlin.model.Item?
 )
 
-@Suppress("unused")
 fun Items.toItem(row: ResultRow): Item {
     return Item(
         id = row[Items.id],
         itemNumber = row[Items.itemNumber],
-        owner = null,
-        aquisitionDateTime = row[Items.aquisitionDateTime]
+        owner = Users.getUser(row[Pokemons.owner]),
+        aquisitionDateTime = row[Items.aquisitionDateTime],
+        apiInfo = null
     )
 }

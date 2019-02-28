@@ -5,7 +5,7 @@ import com.zaxxer.hikari.HikariDataSource
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import model.Item
-import model.Pokemon
+import model.Pokemons
 import model.User
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
@@ -21,7 +21,7 @@ object DatabaseFactory {
     fun init() {
         Database.connect(hikari())
         transaction {
-            SchemaUtils.create(Item, Pokemon, User)
+            SchemaUtils.create(Item, Pokemons, User)
         }
     }
 
