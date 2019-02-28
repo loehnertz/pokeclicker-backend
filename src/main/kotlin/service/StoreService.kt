@@ -1,14 +1,20 @@
 package service
 
+import com.google.gson.Gson
 import me.sargunvohra.lib.pokekotlin.client.PokeApiClient
 import me.sargunvohra.lib.pokekotlin.model.LocationArea
 import model.Boosterpack
+import redis.clients.jedis.Jedis
+
+const val RedisHashMapKey = "locationAreas"
 
 class StoreService {
+    private val gson = Gson()
     private val pokeApi = PokeApiClient()
+    private var redis = Jedis("localhost")
 
     fun getAllBoosterpacks(): List<Boosterpack> {
-        val locationAreas = pokeApi.getLocationAreaList(0, 10).results.map { getLocationArea(it.id) }
+        val locationAreas = pokeApi.getLocationAreaList(0, 100).results.map { getLocationArea(it.id) }
 
         return locationAreas.map {
             Boosterpack(
@@ -21,7 +27,16 @@ class StoreService {
     }
 
     private fun getLocationArea(id: Int): LocationArea {
-        return pokeApi.getLocationArea(id)
+        val cachedValue = redis.hmget(RedisHashMapKey, id.toString()).firstOrNull()
+        if (cachedValue != null) {
+            return gson.fromJson(cachedValue, LocationArea::class.java)
+        }
+
+        val locationArea = pokeApi.getLocationArea(id)
+
+        redis.hmset(RedisHashMapKey, mapOf(id.toString() to gson.toJson(locationArea)))
+
+        return locationArea
     }
 
     private fun convertLocationName(locationName: String): String {
