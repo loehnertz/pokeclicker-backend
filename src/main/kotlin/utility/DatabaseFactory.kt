@@ -2,8 +2,6 @@ package utility
 
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import model.Items
 import model.Pokemons
 import model.Users
@@ -33,11 +31,5 @@ object DatabaseFactory {
         config.password = databasePassword
         config.validate()
         return HikariDataSource(config)
-    }
-
-    suspend fun <T> dbQuery(block: () -> T) {
-        withContext(Dispatchers.IO) {
-            transaction { block() }
-        }
     }
 }

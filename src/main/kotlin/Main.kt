@@ -10,6 +10,8 @@ import io.ktor.jackson.jackson
 import io.ktor.routing.Routing
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
+import io.ktor.sessions.Sessions
+import io.ktor.sessions.cookie
 import io.ktor.websocket.WebSockets
 import resource.store
 import resource.user
@@ -17,10 +19,16 @@ import service.StoreService
 import service.UserService
 import utility.DatabaseFactory
 
+data class Session(val userId: Int)
+
 fun Application.module() {
     install(DefaultHeaders)
     install(CallLogging)
     install(WebSockets)
+
+    install(Sessions) {
+        cookie<Session>("SESSION")
+    }
 
     install(ContentNegotiation) {
         jackson {
