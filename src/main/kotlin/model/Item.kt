@@ -1,3 +1,5 @@
+@file:Suppress("unused")
+
 package model
 
 import org.jetbrains.exposed.sql.ReferenceOption
@@ -19,7 +21,6 @@ data class Item(
     val aquisitionDateTime: DateTime
 )
 
-@Suppress("unused")
 fun Items.toItem(row: ResultRow): Item {
     return Item(
         id = row[Items.id],
