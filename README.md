@@ -1,4 +1,6 @@
 # backend
 The back-end of PokéClicker
 
-[![Build Status](http://ec2-3-87-8-45.compute-1.amazonaws.com:8080/buildStatus/icon?job=Backend)](http://ec2-3-87-8-45.compute-1.amazonaws.com:8080/job/Backend/)
+[![Build Status](http://jenkins.uva-se.nl/buildStatus/icon?job=Backend)](http://jenkins.uva-se.nl/job/Backend/)
+
+Application is running at the following URL: http://docker.uva-se.nl/users
