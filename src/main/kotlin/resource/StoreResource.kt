@@ -36,10 +36,14 @@ fun Route.store(storeService: StoreService) {
                 val session: Session? = call.sessions.get<Session>()
 
                 if (boosterpackId != null) {
-                    try {
-                        call.respond(storeService.buyBoosterpack(boosterpackId.toInt(), 2))
-                    } catch (e: Exception) {
-                        call.respond(HttpStatusCode.BadRequest, e.localizedMessage)
+                    if (session != null) {
+                        try {
+                            call.respond(storeService.buyBoosterpack(boosterpackId.toInt(), session.userId.toInt()))
+                        } catch (e: Exception) {
+                            call.respond(HttpStatusCode.BadRequest, e.localizedMessage)
+                        }
+                    } else {
+                        call.respond(HttpStatusCode.Unauthorized, "You are not logged in at the moment")
                     }
                 } else {
                     call.respond("No ID was specified")
