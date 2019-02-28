@@ -76,16 +76,17 @@ class StoreService {
                     it[pokeNumber] = pokemon.id
                     it[owner] = user.id
                     it[xp] = pokemon.baseExperience
-                    it[aquisitionDateTime] = DateTime.now()
+                    it[aquisitionDateTime] = DateTime()
                 }
 
                 receivedPokemons.add(
-                    Pokemon(
+                    model.Pokemon(
                         id = insertedPokemon.resultedValues!!.first()[Pokemons.id],
                         pokeNumber = pokemon.id,
                         owner = user,
                         xp = pokemon.baseExperience,
-                        aquisitionDateTime = DateTime()
+                        aquisitionDateTime = DateTime(),
+                        apiInfo = pokemon
                     )
                 )
             }
