@@ -38,7 +38,7 @@ fun Route.store(storeService: StoreService) {
                 if (boosterpackId != null) {
                     if (session != null) {
                         try {
-                            call.respond(storeService.buyBoosterpack(boosterpackId.toInt(), session.userId.toInt()))
+                            call.respond(storeService.buyBoosterpack(boosterpackId.toInt(), 1))
                         } catch (e: Exception) {
                             call.respond(HttpStatusCode.BadRequest, e.localizedMessage)
                         }
