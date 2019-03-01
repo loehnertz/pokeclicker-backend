@@ -1,4 +1,4 @@
-package service
+package utility
 
 import io.ktor.auth.OAuthServerSettings
 import io.ktor.http.HttpMethod

@@ -27,8 +27,8 @@ import resource.store
 import resource.user
 import service.StoreService
 import service.UserService
-import service.googleOauthProvider
 import utility.DatabaseFactory
+import utility.googleOauthProvider
 
 class Session(val userId: String)
 
