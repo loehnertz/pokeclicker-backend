@@ -1,3 +1,3 @@
 package service
 
-class UserService {}
+class UserService
