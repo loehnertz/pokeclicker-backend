@@ -62,7 +62,7 @@ fun Application.module() {
     DatabaseFactory.init()
 
     install(Routing) {
-        user(UserService())    
+        user(UserService())
         store(StoreService())
     }
 }
