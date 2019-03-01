@@ -7,6 +7,7 @@ import model.Pokemons
 import model.Users
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
+import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.transactions.transaction
 
 object DatabaseFactory {
@@ -20,6 +21,11 @@ object DatabaseFactory {
         Database.connect(hikari())
         transaction {
             SchemaUtils.create(Items, Pokemons, Users)
+
+            Users.insert {
+                it[name] = "Ash"
+                it[pokeDollars] = 10000
+            }
         }
     }
 
