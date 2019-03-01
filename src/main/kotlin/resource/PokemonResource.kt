@@ -6,6 +6,7 @@ import io.ktor.application.call
 import io.ktor.http.Parameters
 import io.ktor.request.receiveParameters
 import io.ktor.response.respond
+import io.ktor.response.respondText
 import io.ktor.routing.Route
 import io.ktor.routing.get
 import io.ktor.routing.route
@@ -16,9 +17,11 @@ fun Route.pokemon(pokemonService: PokemonService) {
         get("/{id}") {
             val id = call.parameters["id"]
             if (id != null) {
-                val postParameters: Parameters = call.receiveParameters()
-                call.respond(pokemonService.getPokemon(id.toInt(), postParameters["id"]!!.toInt()))
+//                val postParameters: Parameters = call.receiveParameters()
+                call.respond(pokemonService.getOwnedPokemon(id.toInt())) //, postParameters["id"]!!.toInt()))
             }
+            call.respondText("Hello, $id")
+
         }
     }
 
