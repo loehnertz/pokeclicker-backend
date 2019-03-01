@@ -12,4 +12,5 @@ COPY ./target/pokeclicker-1.0-SNAPSHOT-jar-with-dependencies.jar /app/pokeclicke
 COPY ./sec /app/secr
 WORKDIR /app
 
-CMD source /app/secrets ; java -server -XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap -XX:InitialRAMFraction=2 -XX:MinRAMFraction=2 -XX:MaxRAMFraction=2 -XX:+UseG1GC -XX:MaxGCPauseMillis=100 -XX:+UseStringDeduplication -jar pokeclicker-backend.jar
+RUN source .env
+CMD ["java", "-server", "-XX:+UnlockExperimentalVMOptions", "-XX:+UseCGroupMemoryLimitForHeap", "-XX:InitialRAMFraction=2", "-XX:MinRAMFraction=2", "-XX:MaxRAMFraction=2", "-XX:+UseG1GC", "-XX:MaxGCPauseMillis=100", "-XX:+UseStringDeduplication", "-jar", "pokeclicker-backend.jar"]
