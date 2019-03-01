@@ -49,5 +49,6 @@ fun Route.user(userService: UserService) {
         }
     }
 
+    @Suppress("UNUSED_VARIABLE")
     val mapper = jacksonObjectMapper().apply { setSerializationInclusion(JsonInclude.Include.NON_NULL) }
 }

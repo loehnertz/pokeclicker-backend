@@ -1,8 +1,9 @@
 package model
 
 import org.jetbrains.exposed.sql.ReferenceOption
+import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.Table
-import java.time.LocalDateTime
+import org.joda.time.DateTime
 
 object Pokemons : Table() {
     val id = integer("id").primaryKey().autoIncrement()
@@ -15,7 +16,19 @@ object Pokemons : Table() {
 data class Pokemon(
     val id: Int,
     val pokeNumber: Int,
-    val owner: Users,
+    val owner: User?,
     val xp: Int,
-    val aquisitionDateTime: LocalDateTime
+    val aquisitionDateTime: DateTime,
+    var apiInfo: me.sargunvohra.lib.pokekotlin.model.Pokemon?
 )
+
+fun Pokemons.toPokemon(row: ResultRow): Pokemon {
+    return Pokemon(
+        id = row[Pokemons.id],
+        pokeNumber = row[Pokemons.pokeNumber],
+        owner = Users.getUser(row[Pokemons.owner]),
+        xp = row[Pokemons.xp],
+        aquisitionDateTime = row[Pokemons.aquisitionDateTime],
+        apiInfo = null
+    )
+}
