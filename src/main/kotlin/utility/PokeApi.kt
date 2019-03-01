@@ -13,7 +13,7 @@ object PokeApi {
     val client = PokeApiClient()
 
     private val gson = Gson()
-    private val redis = Jedis("localhost")
+    private val redis = Jedis(System.getenv("redis_host"))
 
     fun getLocationArea(id: Int): LocationArea {
         val cachedValue = redis.hmget(RedisHashMapKeyLocationAreas, id.toString()).firstOrNull()

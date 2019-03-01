@@ -27,8 +27,8 @@ import resource.store
 import resource.user
 import service.StoreService
 import service.UserService
-import service.googleOauthProvider
 import utility.DatabaseFactory
+import utility.googleOauthProvider
 
 class Session(val userId: String)
 
@@ -39,8 +39,7 @@ fun Application.module() {
 
     install(Sessions) {
         cookie<Session>("oauthSampleSessionId") {
-            val secretSignKey = hex("000102030405060708090a0b0c0d0e0f") // @TODO: Remember to change this!
-            //val secretSignKey = hex(System.getenv("pokeclicker_session_key"))
+            val secretSignKey = hex(System.getenv("session_sign_key"))
             transform(SessionTransportTransformerMessageAuthentication(secretSignKey))
         }
     }
