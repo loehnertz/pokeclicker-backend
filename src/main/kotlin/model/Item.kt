@@ -1,3 +1,5 @@
+@file:Suppress("unused")
+
 package model
 
 import org.jetbrains.exposed.sql.ReferenceOption

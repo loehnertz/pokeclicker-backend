@@ -10,16 +10,30 @@ import io.ktor.jackson.jackson
 import io.ktor.routing.Routing
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
+import io.ktor.sessions.SessionTransportTransformerMessageAuthentication
+import io.ktor.sessions.Sessions
+import io.ktor.sessions.cookie
+import io.ktor.util.hex
 import io.ktor.websocket.WebSockets
+import resource.store
 import resource.user
-import service.DatabaseFactory
+import service.StoreService
 import service.UserService
+import utility.DatabaseFactory
 
+class Session(val userId: String)
 
 fun Application.module() {
     install(DefaultHeaders)
     install(CallLogging)
     install(WebSockets)
+
+    install(Sessions) {
+        cookie<Session>("oauthSampleSessionId") {
+            val secretSignKey = hex(System.getenv("pokeclicker_session_key"))
+            transform(SessionTransportTransformerMessageAuthentication(secretSignKey))
+        }
+    }
 
     install(ContentNegotiation) {
         jackson {
@@ -29,13 +43,11 @@ fun Application.module() {
 
     DatabaseFactory.init()
 
-    val userService = UserService()
-
     install(Routing) {
-        user(userService)
+        user(UserService())
+        store(StoreService())
     }
 }
-
 
 fun main() {
     embeddedServer(Netty, 8080, watchPaths = listOf("MainKt"), module = Application::module).start()

@@ -1,12 +1,10 @@
-package service
+package utility
 
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
-import model.Item
+import model.Items
 import model.Pokemons
-import model.User
+import model.Users
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -21,7 +19,7 @@ object DatabaseFactory {
     fun init() {
         Database.connect(hikari())
         transaction {
-            SchemaUtils.create(Item, Pokemons, User)
+            SchemaUtils.create(Items, Pokemons, Users)
         }
     }
 
@@ -33,11 +31,5 @@ object DatabaseFactory {
         config.password = databasePassword
         config.validate()
         return HikariDataSource(config)
-    }
-
-    suspend fun <T> dbQuery(block: () -> T) {
-        withContext(Dispatchers.IO) {
-            transaction { block() }
-        }
     }
 }
