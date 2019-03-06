@@ -3,7 +3,7 @@ package utility
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import service.user.BalanceManager
+import service.user.balance.BalanceManager
 import java.util.concurrent.TimeUnit
 
 object Scheduler {

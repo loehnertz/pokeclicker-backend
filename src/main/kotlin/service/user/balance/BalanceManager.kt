@@ -1,4 +1,4 @@
-package service.user
+package service.user.balance
 
 import model.User
 import model.Users

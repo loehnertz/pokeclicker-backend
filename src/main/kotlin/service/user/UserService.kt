@@ -4,6 +4,7 @@ import model.User
 
 import service.user.authentication.Login
 import service.user.authentication.Registration
+import service.user.balance.BalanceManager
 import service.user.data.UserAuthenticationResponse
 import service.user.data.UserLoginRequest
 import service.user.data.UserRegistrationRequest
