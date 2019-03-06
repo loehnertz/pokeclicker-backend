@@ -1,4 +1,4 @@
-package service
+package service.store
 
 import io.ktor.features.BadRequestException
 import me.sargunvohra.lib.pokekotlin.model.Pokemon
