@@ -14,7 +14,7 @@ object Registration {
             return UserAuthenticationResponse(error = "Password should be at least 6 characters long")
         } else if (registrationRequest.username.length < 4) {
             return UserAuthenticationResponse(error = "Username should be at least 4 characters long")
-        } else if (!userNameIsValid(registrationRequest.username)) {
+        } else if (!usernameIsValid(registrationRequest.username)) {
             return UserAuthenticationResponse(error = "Login should be consists of digits, letters, dots or underscores")
         } else {
             val hashedPassword = BCrypt.hashpw(registrationRequest.password, BCrypt.gensalt())
@@ -42,7 +42,7 @@ object Registration {
         return userAlreadyExists != null
     }
 
-    private fun userNameIsValid(username: String): Boolean {
+    private fun usernameIsValid(username: String): Boolean {
         return Regex("^[\\pL\\p{Mn}\\p{Nd}\\p{Pc}]+$").matches(username)
     }
 }
