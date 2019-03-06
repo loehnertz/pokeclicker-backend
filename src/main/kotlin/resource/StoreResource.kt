@@ -9,10 +9,11 @@ import io.ktor.response.respond
 import io.ktor.routing.Route
 import io.ktor.routing.get
 import io.ktor.routing.route
+import resource.data.Response
 import service.store.StoreService
-import service.user.TokenExpiredException
-import service.user.TokenManager
-import service.user.TokenMissingException
+import service.user.authorization.TokenExpiredException
+import service.user.authorization.TokenManager
+import service.user.authorization.TokenMissingException
 
 fun Route.store(storeService: StoreService) {
     route("/store") {

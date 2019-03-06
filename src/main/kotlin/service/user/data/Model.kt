@@ -1,6 +1,6 @@
-package service.user
+package service.user.data
 
-import service.user.TokenManager.UserTokenExpiryInSeconds
+import service.user.authorization.TokenManager.UserTokenExpiryInSeconds
 
 data class UserLoginRequest(
     val username: String,

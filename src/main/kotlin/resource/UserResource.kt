@@ -28,6 +28,8 @@ const val WebSocketClosingKeyword = "bye"
 const val WebSocketClickingMessage = "Click successfully received"
 const val WebSocketClosingMessage = "Connection closed by client"
 const val WebSocketUnknownCommandMessage = "The received command is unknown"
+import service.user.data.UserLoginRequest
+import service.user.data.UserRegistrationRequest
 
 fun Route.user(userService: UserService) {
     route("/users") {

@@ -1,4 +1,4 @@
-package service.user
+package service.user.authorization
 
 import io.ktor.http.Headers
 import io.ktor.http.Parameters

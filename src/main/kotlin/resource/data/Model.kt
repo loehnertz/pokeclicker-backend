@@ -1,4 +1,4 @@
-package resource
+package resource.data
 
 data class Response(
     val ok: Boolean = false,
