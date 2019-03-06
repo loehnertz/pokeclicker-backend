@@ -17,10 +17,10 @@ services:
     ports:
       - "3306"
     volumes:
-      - my-db:/var/lib/mysql
+      - data:/var/lib/mysql
   redis:
     image: "redis:alpine"
     ports:
       - "6379"
 volumes:
-  my-db:
+  data:
