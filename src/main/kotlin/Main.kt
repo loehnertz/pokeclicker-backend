@@ -10,6 +10,7 @@ import io.ktor.client.HttpClient
 import io.ktor.client.engine.apache.Apache
 import io.ktor.features.*
 import io.ktor.http.HttpHeaders
+import io.ktor.http.HttpMethod
 import io.ktor.jackson.jackson
 import io.ktor.request.host
 import io.ktor.request.port
@@ -38,6 +39,8 @@ fun Application.module() {
     install(WebSockets)
 
     install(CORS) {
+        method(HttpMethod.Get)
+        method(HttpMethod.Post)
         header(HttpHeaders.AccessControlAllowOrigin)
         anyHost()
     }
