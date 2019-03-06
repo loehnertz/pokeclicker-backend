@@ -29,10 +29,7 @@ class StoreService {
         )
     }
 
-    fun buyBoosterpack(boosterpackId: Int, userId: Int): List<model.Pokemon> {
-        // Get the user object out of the database
-        val user = Users.getUser(userId)
-
+    fun buyBoosterpack(boosterpackId: Int, user: User): List<model.Pokemon> {
         // Retrieve the information necessary to open a new boosterpack
         val boosterpack = getSpecificBoosterpack(boosterpackId)
         val locationArea = PokeApi.getLocationArea(boosterpackId)
