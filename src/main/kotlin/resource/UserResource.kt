@@ -17,10 +17,10 @@ import io.ktor.websocket.webSocket
 import kotlinx.coroutines.channels.consumeEach
 import kotlinx.coroutines.channels.mapNotNull
 import kotlinx.coroutines.delay
-import service.user.TokenManager
-import service.user.UserLoginRequest
-import service.user.UserRegistrationRequest
 import service.user.UserService
+import service.user.authorization.TokenManager
+import service.user.data.UserLoginRequest
+import service.user.data.UserRegistrationRequest
 import java.util.concurrent.TimeUnit
 
 const val WebSocketClickingKeyword = "click"
@@ -28,8 +28,6 @@ const val WebSocketClosingKeyword = "bye"
 const val WebSocketClickingMessage = "Click successfully received"
 const val WebSocketClosingMessage = "Connection closed by client"
 const val WebSocketUnknownCommandMessage = "The received command is unknown"
-import service.user.data.UserLoginRequest
-import service.user.data.UserRegistrationRequest
 
 fun Route.user(userService: UserService) {
     route("/users") {
