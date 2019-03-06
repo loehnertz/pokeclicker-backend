@@ -35,9 +35,13 @@ fun Route.user(userService: UserService) {
             }
         }
 
-                    if (id != null) call.sessions.set(Session(id))
-                    call.respondRedirect("/")
-                }
+        post("/register") {
+            try {
+                val registrationRequest = call.receive<UserRegistrationRequest>()
+                val registrationResponse = userService.registerUser(registrationRequest)
+                call.respond(registrationResponse)
+            } catch (exception: MissingKotlinParameterException) {
+                call.respond("You are missing one or multiple parameters")
             }
         }
     }
