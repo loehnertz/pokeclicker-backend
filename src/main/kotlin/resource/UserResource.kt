@@ -71,7 +71,7 @@ fun Route.user(userService: UserService) {
 
                 when {
                     text.equals(WebSocketClickingKeyword, ignoreCase = true) -> {
-                        balanceManager.increaseCurrentBalance()
+                        balanceManager.increaseCurrentBalance(increaseAmount = 1)
                         outgoing.send(Frame.Text(WebSocketClickingMessage))
                     }
                     text.equals(WebSocketClosingKeyword, ignoreCase = true) -> {
