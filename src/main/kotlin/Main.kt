@@ -8,10 +8,9 @@ import io.ktor.auth.Authentication
 import io.ktor.auth.oauth
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.apache.Apache
-import io.ktor.features.CallLogging
-import io.ktor.features.ContentNegotiation
-import io.ktor.features.DefaultHeaders
-import io.ktor.features.origin
+import io.ktor.features.*
+import io.ktor.http.HttpHeaders
+import io.ktor.http.HttpMethod
 import io.ktor.jackson.jackson
 import io.ktor.request.host
 import io.ktor.request.port
@@ -34,8 +33,17 @@ class Session(val userId: String)
 
 fun Application.module() {
     install(DefaultHeaders)
+
     install(CallLogging)
+
     install(WebSockets)
+
+    install(CORS) {
+        method(HttpMethod.Get)
+        method(HttpMethod.Post)
+        header(HttpHeaders.AccessControlAllowOrigin)
+        anyHost()
+    }
 
     install(Sessions) {
         cookie<Session>("oauthSampleSessionId") {
