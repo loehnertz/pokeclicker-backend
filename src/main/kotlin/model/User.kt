@@ -23,7 +23,7 @@ data class User(
     val name: String,
     val email: String,
     val password: String,
-    val avatarUri: String?,
+    val avatarUri: String? = null,
     val pokeDollars: Long
 )
 

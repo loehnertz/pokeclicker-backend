@@ -16,7 +16,7 @@ object Pokemons : Table() {
 data class Pokemon(
     val id: Int,
     val pokeNumber: Int,
-    val owner: User?,
+    val owner: User? = null,
     val xp: Int,
     val aquisitionDateTime: DateTime,
     var apiInfo: me.sargunvohra.lib.pokekotlin.model.Pokemon?
