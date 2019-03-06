@@ -12,11 +12,20 @@ import utility.PokeApi
 class PokemonService {
 
     fun getDBPokemon(id: Int): Pokemon {
-        val pokemon = transaction {
+        val pokemonRow = transaction {
             Pokemons.select{Pokemons.id eq id}.firstOrNull()
             } ?: throw NotFoundException("No Pokemon with ID '$id' exists")
 
-        return Pokemons.toPokemon(pokemon)
+        val pokemon = Pokemons.toPokemon(pokemonRow)
+
+        return Pokemon(
+            id = pokemon.id,
+            pokeNumber = pokemon.pokeNumber,
+            owner = pokemon.owner,
+            xp = pokemon.xp,
+            aquisitionDateTime = pokemon.aquisitionDateTime,
+            apiInfo = PokeApi.client.getPokemon(id)
+        )
     }
 
     fun getPokedexPokemon(id: Int): me.sargunvohra.lib.pokekotlin.model.Pokemon {
