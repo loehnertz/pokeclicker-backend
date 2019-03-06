@@ -12,17 +12,24 @@ import utility.PokeApi
 class ItemService {
 
     fun getDBItem(id: Int): Item {
-        val item = transaction {
+        val itemRow = transaction {
             Items.select{Items.id eq id}.firstOrNull()
         } ?: throw NotFoundException("No Item with ID '$id' exists")
 
-        return Items.toItem(item)
+
+        val item = Items.toItem(itemRow)
+
+        return Item(
+            id = item.id,
+            itemNumber = item.itemNumber,
+            owner = item.owner,
+            aquisitionDateTime = item.aquisitionDateTime,
+            apiInfo = PokeApi.client.getItem(id)
+        )
     }
 
-    fun getApiItem(id: Int): me.sargunvohra.lib.pokekotlin.model.Item {
-        val item = PokeApi.client.getItem(id)
-
-        return item
+    fun getApiItemById(id: Int): me.sargunvohra.lib.pokekotlin.model.Item {
+        return PokeApi.client.getItem(id)
     }
 
 }
