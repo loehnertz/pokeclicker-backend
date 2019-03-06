@@ -3,6 +3,8 @@ package resource
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.ktor.application.call
+import io.ktor.features.BadRequestException
+import io.ktor.http.HttpStatusCode
 import io.ktor.response.respond
 import io.ktor.routing.Route
 import io.ktor.routing.get
@@ -33,6 +35,8 @@ fun Route.store(storeService: StoreService) {
                     call.respond(exception.message)
                 } catch (exception: TokenMissingException) {
                     call.respond(exception.message)
+                } catch (exception: BadRequestException) {
+                    call.respond(HttpStatusCode.BadRequest, Response(error = exception.localizedMessage))
                 } catch (exception: Exception) {
                     // TODO: Add logging here
                     throw exception
