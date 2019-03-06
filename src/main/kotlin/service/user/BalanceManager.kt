@@ -11,8 +11,19 @@ class BalanceManager(val user: User) {
         return redis.hincrBy(RedisKeyUserBalances, user.name, increaseAmount)
     }
 
-    fun retrieveCurrentBalance(): Long? {
-        return redis.hmget(RedisKeyUserBalances, user.name).firstOrNull()?.toLong()
+    fun retrieveCurrentBalance(): Long {
+        val currentBalance = redis.hmget(RedisKeyUserBalances, user.name).firstOrNull()?.toLong()
+
+        return if (currentBalance != null) {
+            currentBalance
+        } else {
+            setCurrentBalance()
+            user.pokeDollars
+        }
+    }
+
+    private fun setCurrentBalance(): String? {
+        return redis.hmset(RedisKeyUserBalances, mapOf(user.name to user.pokeDollars.toString()))
     }
 
     companion object {
@@ -22,6 +33,7 @@ class BalanceManager(val user: User) {
 
         fun syncAllCurrentBalancesToDatabase() {
             val allBalances = redis.hgetAll(RedisKeyUserBalances)
+
             for ((username, currentBalance) in allBalances) {
                 transaction {
                     Users.update({ Users.name eq username }) {
