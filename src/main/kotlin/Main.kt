@@ -25,8 +25,10 @@ import io.ktor.util.hex
 import io.ktor.websocket.WebSockets
 import resource.store
 import resource.user
+import resource.pokemon
 import service.StoreService
 import service.UserService
+import service.PokemonService
 import utility.DatabaseFactory
 import utility.googleOauthProvider
 
@@ -63,6 +65,7 @@ fun Application.module() {
     install(Routing) {
         user(UserService())
         store(StoreService())
+        pokemon(PokemonService())
     }
 }
 
