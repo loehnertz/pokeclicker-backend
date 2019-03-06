@@ -1,10 +1,13 @@
-package service.user
+package service.user.authentication
 
 import model.Users
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.mindrot.jbcrypt.BCrypt
+import service.user.authorization.TokenManager
+import service.user.data.UserAuthenticationResponse
+import service.user.data.UserRegistrationRequest
 
 object Registration {
     fun registerUser(registrationRequest: UserRegistrationRequest): UserAuthenticationResponse {

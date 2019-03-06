@@ -1,4 +1,4 @@
-package service.user
+package service.user.authorization
 
 import io.ktor.http.Headers
 import model.User
@@ -35,7 +35,8 @@ object TokenManager {
 
     fun verifyTokenAndRetrieveUser(headers: Headers): User {
         val providedToken = retrieveTokenFromHttpRequestHeaders(headers)
-        val username = retrieveUsernameByToken(providedToken) ?: throw TokenExpiredException()
+        val username = retrieveUsernameByToken(providedToken)
+            ?: throw TokenExpiredException()
         val tokenIsValid = verifyToken(username = username, providedToken = providedToken)
 
         if (!tokenIsValid) {

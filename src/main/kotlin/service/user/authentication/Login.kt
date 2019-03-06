@@ -1,8 +1,11 @@
-package service.user
+package service.user.authentication
 
 import model.Users
 import model.getUser
 import org.mindrot.jbcrypt.BCrypt
+import service.user.authorization.TokenManager
+import service.user.data.UserAuthenticationResponse
+import service.user.data.UserLoginRequest
 
 object Login {
     fun loginUser(userLoginRequest: UserLoginRequest): UserAuthenticationResponse {
