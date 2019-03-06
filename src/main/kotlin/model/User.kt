@@ -11,14 +11,18 @@ import org.jetbrains.exposed.sql.update
 
 object Users : Table() {
     val id = integer("id").primaryKey().autoIncrement()
-    val name = varchar("name", 255)
+    val name = varchar("name", 255).uniqueIndex()
+    val email = varchar("email", 511).uniqueIndex()
+    val password = varchar("password", 255)
     val avatarUri = varchar("avatarUri", 511).nullable()
-    val pokeDollars = long("pokeDollars")
+    val pokeDollars = long("pokeDollars").default(0)
 }
 
 data class User(
     val id: Int,
     val name: String,
+    val email: String,
+    val password: String,
     val avatarUri: String?,
     val pokeDollars: Long
 )
@@ -27,6 +31,8 @@ fun Users.toUser(row: ResultRow): User {
     return User(
         id = row[Users.id],
         name = row[Users.name],
+        email = row[Users.email],
+        password = row[Users.password],
         avatarUri = row[Users.avatarUri],
         pokeDollars = row[Users.pokeDollars]
     )
@@ -37,6 +43,14 @@ fun Users.getUser(userId: Int): User {
         transaction {
             Users.select { Users.id eq userId }.firstOrNull()
         } ?: throw NotFoundException("No user with ID '$userId' exists")
+    )
+}
+
+fun Users.getUser(username: String): User {
+    return Users.toUser(
+        transaction {
+            Users.select { Users.name eq username }.firstOrNull()
+        } ?: throw NotFoundException("No user with the name '$username' exists")
     )
 }
 
