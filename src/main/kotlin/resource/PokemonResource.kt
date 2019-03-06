@@ -18,7 +18,15 @@ fun Route.pokemon(pokemonService: PokemonService) {
             val id = call.parameters["id"]
             if (id != null) {
 //                val postParameters: Parameters = call.receiveParameters()
-                call.respond(pokemonService.getPokemon(id.toInt())) //, postParameters["id"]!!.toInt()))
+                call.respond(pokemonService.getDBPokemon(id.toInt())) //, postParameters["id"]!!.toInt()))
+            }
+        }
+
+        get("/pokedex/{id}") {
+            val id = call.parameters["id"]
+            if (id != null) {
+//                val postParameters: Parameters = call.receiveParameters()
+                call.respond(pokemonService.getPokedexPokemon(id.toInt())) //, postParameters["id"]!!.toInt()))
             }
         }
     }
