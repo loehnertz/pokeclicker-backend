@@ -14,4 +14,21 @@ class BalanceManager(val user: User) {
     fun retrieveCurrentBalance(): Long? {
         return redis.hmget(RedisKeyUserBalances, user.name).firstOrNull()?.toLong()
     }
+
+    companion object {
+        private const val RedisKeyUserBalances = "balances"
+
+        private val redis = Jedis(System.getenv("redis_host"))
+
+        fun syncAllCurrentBalancesToDatabase() {
+            val allBalances = redis.hgetAll(RedisKeyUserBalances)
+            for ((username, currentBalance) in allBalances) {
+                transaction {
+                    Users.update({ Users.name eq username }) {
+                        it[pokeDollars] = currentBalance.toLong()
+                    }
+                }
+            }
+        }
+    }
 }
