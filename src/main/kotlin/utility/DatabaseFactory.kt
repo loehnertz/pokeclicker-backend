@@ -7,7 +7,6 @@ import model.Pokemons
 import model.Users
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
-import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.transactions.transaction
 
 object DatabaseFactory {
@@ -19,29 +18,18 @@ object DatabaseFactory {
 
     fun init() {
         Database.connect(hikari())
-        transaction {
-            SchemaUtils.create(Items, Pokemons, Users)
-
-            try {
-                Users.insert {
-                    it[name] = "Ash"
-                    it[email] = "ash@example.org"
-                    it[password] = "pikachu123"
-                    it[pokeDollars] = 10000
-                }
-            } catch (exception: Exception) {
-                println("Example user already exists")
-            }
-        }
+        transaction { SchemaUtils.create(Items, Pokemons, Users) }
     }
 
     private fun hikari(): HikariDataSource {
         val config = HikariConfig()
+
         config.driverClassName = "com.mysql.cj.jdbc.Driver"
         config.jdbcUrl = "jdbc:mysql://$databaseHost:$databasePort/$databaseName"
         config.username = databaseUser
         config.password = databasePassword
         config.validate()
+
         return HikariDataSource(config)
     }
 }
