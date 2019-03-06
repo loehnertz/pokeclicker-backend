@@ -74,7 +74,6 @@ class StoreService {
                     model.Pokemon(
                         id = insertedPokemon.resultedValues!!.first()[Pokemons.id],
                         pokeNumber = pokemon.id,
-                        owner = user,
                         xp = pokemon.baseExperience,
                         aquisitionDateTime = DateTime(),
                         apiInfo = pokemon
