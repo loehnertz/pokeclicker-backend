@@ -22,9 +22,15 @@ object DatabaseFactory {
         transaction {
             SchemaUtils.create(Items, Pokemons, Users)
 
-            Users.insert {
-                it[name] = "Ash"
-                it[pokeDollars] = 10000
+            try {
+                Users.insert {
+                    it[name] = "Ash"
+                    it[email] = "ash@example.org"
+                    it[password] = "pikachu123"
+                    it[pokeDollars] = 10000
+                }
+            } catch (exception: Exception) {
+                println("Example user already exists")
             }
         }
     }
