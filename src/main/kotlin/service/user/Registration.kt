@@ -46,6 +46,12 @@ object Registration {
         return userAlreadyExists != null
     }
 
+    /**
+     * TODO: Add description
+     *
+     * @param[username] The name the user has chosen.
+     * @return A boolean marking if the username is valid.
+     */
     private fun usernameIsValid(username: String): Boolean {
         return Regex("^[\\pL\\p{Mn}\\p{Nd}\\p{Pc}]+$").matches(username)
     }
