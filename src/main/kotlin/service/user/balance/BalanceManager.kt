@@ -4,7 +4,7 @@ import model.User
 import model.Users
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.update
-import redis.clients.jedis.Jedis
+import utility.RedisFactory
 
 class BalanceManager(val user: User) {
     fun increaseCurrentBalance(increaseAmount: Long = 1): Long? {
@@ -29,7 +29,7 @@ class BalanceManager(val user: User) {
     companion object {
         private const val RedisKeyUserBalances = "balances"
 
-        private val redis = Jedis(System.getenv("redis_host"))
+        private val redis = RedisFactory.getRedisClient()
 
         fun syncAllCurrentBalancesToDatabase() {
             val allBalances = redis.hgetAll(RedisKeyUserBalances)

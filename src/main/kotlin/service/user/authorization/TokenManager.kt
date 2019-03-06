@@ -6,7 +6,7 @@ import model.User
 import model.Users
 import model.getUser
 import org.mindrot.jbcrypt.BCrypt
-import redis.clients.jedis.Jedis
+import utility.RedisFactory
 import java.util.concurrent.TimeUnit
 
 object TokenManager {
@@ -16,7 +16,7 @@ object TokenManager {
     private const val RedisBaseKeyTokenByUsername = "token_by_username"
     private const val RedisBaseKeyUsernameByToken = "username_by_token"
 
-    private val redis = Jedis(System.getenv("redis_host"))
+    private val redis = RedisFactory.getRedisClient()
 
     internal val UserTokenExpiryInSeconds = TimeUnit.DAYS.toSeconds(7).toInt()
 

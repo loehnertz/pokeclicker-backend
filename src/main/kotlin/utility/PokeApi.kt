@@ -4,14 +4,13 @@ import com.google.gson.Gson
 import me.sargunvohra.lib.pokekotlin.client.PokeApiClient
 import me.sargunvohra.lib.pokekotlin.model.LocationArea
 import me.sargunvohra.lib.pokekotlin.model.Pokemon
-import redis.clients.jedis.Jedis
 
 object PokeApi {
     private const val RedisHashMapKeyLocationAreas = "locationAreas"
     private const val RedisHashMapKeyPokemons = "pokemons"
 
     private val gson = Gson()
-    private val redis = Jedis(System.getenv("redis_host"))
+    private val redis = RedisFactory.getRedisClient()
 
     val client = PokeApiClient()
 
