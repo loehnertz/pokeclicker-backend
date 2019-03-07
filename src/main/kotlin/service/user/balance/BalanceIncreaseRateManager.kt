@@ -8,7 +8,12 @@ import utility.RedisFactory
 class BalanceIncreaseRateManager(val user: User) {
     fun increaseBalanceBasedOnIncreaseRate(balanceManager: BalanceManager) {
         val currentIncreaseRatePerMinute = retrieveIncreaseRate()
-        if (currentIncreaseRatePerMinute != null) balanceManager.increaseCurrentBalance(currentIncreaseRatePerMinute)
+
+        if (currentIncreaseRatePerMinute != null) {
+            balanceManager.increaseCurrentBalance(currentIncreaseRatePerMinute)
+        } else {
+            updateIncreaseRate()
+        }
     }
 
     fun updateIncreaseRate() {
@@ -39,7 +44,7 @@ class BalanceIncreaseRateManager(val user: User) {
 
     private fun calculateIncreaseRatePerSecond(): Long {
         val pokemons = Users.getPokemons(user.id)
-        return pokemons.fold(0) { sum, pokemon -> sum + pokemon.apiInfo!!.baseExperience }.toLong()
+        return pokemons.fold(0) { sum, pokemon -> sum + pokemon.fatApiInfo!!.baseExperience }.toLong()
     }
 
     companion object {
