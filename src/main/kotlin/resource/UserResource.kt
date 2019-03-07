@@ -18,9 +18,12 @@ import kotlinx.coroutines.channels.consumeEach
 import kotlinx.coroutines.channels.mapNotNull
 import kotlinx.coroutines.delay
 import service.user.UserService
+import service.user.authorization.TokenExpiredException
 import service.user.authorization.TokenManager
+import service.user.authorization.TokenMissingException
 import service.user.data.UserLoginRequest
 import service.user.data.UserRegistrationRequest
+import utility.Scheduler
 import java.util.concurrent.TimeUnit
 
 const val WebSocketClickingKeyword = "click"
@@ -52,34 +55,52 @@ fun Route.user(userService: UserService) {
         }
 
         webSocket("/balance") {
-            val user = TokenManager.verifyTokenAndRetrieveUser(call.parameters)
-            val balanceManager = userService.buildBalanceManager(user)
+            try {
+                val user = TokenManager.verifyTokenAndRetrieveUser(call.parameters)
+                val balanceManager = userService.buildBalanceManager(user)
 
-            while (true) {
-                val currentBalance = balanceManager.retrieveCurrentBalance()
-                outgoing.send(Frame.Text(currentBalance.toString()))
-                delay(TimeUnit.SECONDS.toMillis(1))
+                while (true) {
+                    val currentBalance = balanceManager.retrieveCurrentBalance()
+                    outgoing.send(Frame.Text(currentBalance.toString()))
+                    delay(TimeUnit.SECONDS.toMillis(Scheduler.BalanceIncreaseTimeoutInSeconds))
+                }
+            } catch (exception: TokenExpiredException) {
+                call.respond(exception.message)
+            } catch (exception: TokenMissingException) {
+                call.respond(exception.message)
+            } catch (exception: Exception) {
+                // TODO: Add logging here
+                throw exception
             }
         }
 
         webSocket("/clicking") {
-            val user = TokenManager.verifyTokenAndRetrieveUser(call.parameters)
-            val balanceManager = userService.buildBalanceManager(user)
+            try {
+                val user = TokenManager.verifyTokenAndRetrieveUser(call.parameters)
+                val balanceManager = userService.buildBalanceManager(user)
 
-            incoming.mapNotNull { it as? Frame.Text }.consumeEach { frame ->
-                val text = frame.readText()
+                incoming.mapNotNull { it as? Frame.Text }.consumeEach { frame ->
+                    val text = frame.readText()
 
-                when {
-                    text.equals(WebSocketClickingKeyword, ignoreCase = true) -> {
-                        balanceManager.incrementCurrentBalance()
-                        outgoing.send(Frame.Text(WebSocketClickingMessage))
+                    when {
+                        text.equals(WebSocketClickingKeyword, ignoreCase = true) -> {
+                            balanceManager.incrementCurrentBalance()
+                            outgoing.send(Frame.Text(WebSocketClickingMessage))
+                        }
+                        text.equals(WebSocketClosingKeyword, ignoreCase = true) -> {
+                            outgoing.send(Frame.Text(WebSocketClosingMessage))
+                            close(CloseReason(CloseReason.Codes.NORMAL, message = WebSocketClosingMessage))
+                        }
+                        else -> outgoing.send(Frame.Text(WebSocketUnknownCommandMessage))
                     }
-                    text.equals(WebSocketClosingKeyword, ignoreCase = true) -> {
-                        outgoing.send(Frame.Text(WebSocketClosingMessage))
-                        close(CloseReason(CloseReason.Codes.NORMAL, message = WebSocketClosingMessage))
-                    }
-                    else -> outgoing.send(Frame.Text(WebSocketUnknownCommandMessage))
                 }
+            } catch (exception: TokenExpiredException) {
+                call.respond(exception.message)
+            } catch (exception: TokenMissingException) {
+                call.respond(exception.message)
+            } catch (exception: Exception) {
+                // TODO: Add logging here
+                throw exception
             }
         }
     }
