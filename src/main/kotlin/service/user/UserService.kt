@@ -5,8 +5,11 @@ import model.toPokemon
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.transaction
+import model.User
+
 import service.user.authentication.Login
 import service.user.authentication.Registration
+import service.user.balance.BalanceManager
 import service.user.data.UserAuthenticationResponse
 import service.user.data.UserLoginRequest
 import service.user.data.UserRegistrationRequest
@@ -27,5 +30,9 @@ class UserService {
         }
 
         return ownedPokemons
+    }
+
+    fun buildBalanceManager(user: User): BalanceManager {
+        return BalanceManager(user)
     }
 }

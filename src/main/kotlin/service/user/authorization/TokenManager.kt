@@ -1,6 +1,7 @@
 package service.user.authorization
 
 import io.ktor.http.Headers
+import io.ktor.http.Parameters
 import model.User
 import model.Users
 import model.getUser
@@ -11,6 +12,7 @@ import java.util.concurrent.TimeUnit
 object TokenManager {
     private const val AuthorizationHttpRequestHeaderKey = "Authorization"
     private const val AuthorizationHttpRequestHeaderTokenKey = "Token: "
+    private const val AuthorizationHttpRequestParameterKey = "token"
     private const val RedisBaseKeyTokenByUsername = "token_by_username"
     private const val RedisBaseKeyUsernameByToken = "username_by_token"
 
@@ -35,8 +37,16 @@ object TokenManager {
 
     fun verifyTokenAndRetrieveUser(headers: Headers): User {
         val providedToken = retrieveTokenFromHttpRequestHeaders(headers)
-        val username = retrieveUsernameByToken(providedToken)
-            ?: throw TokenExpiredException()
+        return verifyTokenAndRetrieveUser(providedToken)
+    }
+
+    fun verifyTokenAndRetrieveUser(parameters: Parameters): User {
+        val providedToken = retrieveTokenFromHttpRequestParameters(parameters)
+        return verifyTokenAndRetrieveUser(providedToken)
+    }
+
+    private fun verifyTokenAndRetrieveUser(providedToken: String): User {
+        val username = retrieveUsernameByToken(providedToken) ?: throw TokenExpiredException()
         val tokenIsValid = verifyToken(username = username, providedToken = providedToken)
 
         if (!tokenIsValid) {
@@ -49,6 +59,10 @@ object TokenManager {
     private fun retrieveTokenFromHttpRequestHeaders(headers: Headers): String {
         val tokenHeader = headers[AuthorizationHttpRequestHeaderKey] ?: throw TokenMissingException()
         return tokenHeader.removePrefix(AuthorizationHttpRequestHeaderTokenKey)
+    }
+
+    private fun retrieveTokenFromHttpRequestParameters(parameters: Parameters): String {
+        return parameters[AuthorizationHttpRequestParameterKey] ?: throw TokenMissingException()
     }
 
     private fun insertToken(username: String, token: String, redisUsernameByTokenKey: String, redisTokenByUsernameKey: String) {
