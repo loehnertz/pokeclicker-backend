@@ -14,21 +14,16 @@ import utility.PokeApiAdapter
 fun Route.pokemon(pokemonService: PokemonService) {
     route("/pokemon") {
         get("/{id}") {
-            val id = call.parameters["id"]
-            if (id != null) {
-                call.respond(PokeApiAdapter.getPokemonData(id.toInt()))
-            }
+            val id = call.parameters["id"]!!
+            call.respond(PokeApiAdapter.getPokemonData(id.toInt()))
         }
 
         get("/pokedex/{id}") {
-            val id = call.parameters["id"]
-            if (id != null) {
-                call.respond(PokeApi.getPokemon(id.toInt()))
-            }
+            val id = call.parameters["id"]!!
+            call.respond(PokeApi.getPokemon(id.toInt()))
         }
     }
 
-    val mapper = jacksonObjectMapper().apply {
-        setSerializationInclusion(JsonInclude.Include.NON_NULL)
-    }
+    @Suppress("UNUSED_VARIABLE")
+    val mapper = jacksonObjectMapper().apply { setSerializationInclusion(JsonInclude.Include.NON_NULL) }
 }
