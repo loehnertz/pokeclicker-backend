@@ -31,7 +31,7 @@ class StoreService {
             name = capitalizeLocationName(location.name),
             price = determineBoosterpackPrice(pokemonsInLocation, location.id),
             locationId = location.id,
-            hexColor = determineHexColorBasedOnLocationName(location.id),
+            hexColor = determineHexColorBasedOnLocationId(location.id),
             pokemons = pokemonsInLocation
         )
     }
@@ -101,9 +101,9 @@ class StoreService {
         return (basePrice * BasePriceFactor * Math.pow(LocationIdBaseIncrease, locationId.toDouble())).toLong()
     }
 
-    private fun determineHexColorBasedOnLocationName(gameIndex: Int): String {
-        var s0 = (Math.sqrt(5.0) * gameIndex * 0x1000000).toLong()
-        val s1 = gameIndex.toLong()
+    private fun determineHexColorBasedOnLocationId(locationId: Int): String {
+        var s0 = (Math.sqrt(5.0) * locationId * 0x1000000).toLong()
+        val s1 = locationId.toLong()
 
         s0 = s0 xor (s0 shl 23)
         s0 = s0 xor s0.ushr(17)
