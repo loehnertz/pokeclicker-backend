@@ -2,56 +2,38 @@ package main
 
 import com.fasterxml.jackson.databind.SerializationFeature
 import io.ktor.application.Application
-import io.ktor.application.ApplicationCall
 import io.ktor.application.install
-import io.ktor.auth.Authentication
-import io.ktor.auth.oauth
-import io.ktor.client.HttpClient
-import io.ktor.client.engine.apache.Apache
+import io.ktor.features.CORS
 import io.ktor.features.CallLogging
 import io.ktor.features.ContentNegotiation
 import io.ktor.features.DefaultHeaders
-import io.ktor.features.origin
+import io.ktor.http.HttpHeaders
+import io.ktor.http.HttpMethod
 import io.ktor.jackson.jackson
-import io.ktor.request.host
-import io.ktor.request.port
 import io.ktor.routing.Routing
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
-import io.ktor.sessions.SessionTransportTransformerMessageAuthentication
-import io.ktor.sessions.Sessions
-import io.ktor.sessions.cookie
-import io.ktor.util.hex
 import io.ktor.websocket.WebSockets
 import resource.store
 import resource.user
 import resource.pokemon
-import service.StoreService
-import service.UserService
 import service.PokemonService
+import service.store.StoreService
+import service.user.UserService
 import utility.DatabaseFactory
-import utility.googleOauthProvider
-
-class Session(val userId: String)
 
 fun Application.module() {
     install(DefaultHeaders)
+
     install(CallLogging)
+
     install(WebSockets)
 
-    install(Sessions) {
-        cookie<Session>("oauthSampleSessionId") {
-            val secretSignKey = hex(System.getenv("session_sign_key"))
-            transform(SessionTransportTransformerMessageAuthentication(secretSignKey))
-        }
-    }
-
-    install(Authentication) {
-        oauth("google-oauth") {
-            client = HttpClient(Apache)
-            providerLookup = { googleOauthProvider }
-            urlProvider = { redirectUrl("/login") }
-        }
+    install(CORS) {
+        method(HttpMethod.Get)
+        method(HttpMethod.Post)
+        header(HttpHeaders.AccessControlAllowOrigin)
+        anyHost()
     }
 
     install(ContentNegotiation) {
@@ -67,13 +49,6 @@ fun Application.module() {
         store(StoreService())
         pokemon(PokemonService())
     }
-}
-
-private fun ApplicationCall.redirectUrl(path: String): String {
-    val defaultPort = if (request.origin.scheme == "http") 80 else 443
-    val hostPort = request.host() + request.port().let { port -> if (port == defaultPort) "" else ":$port" }
-    val protocol = request.origin.scheme
-    return "$protocol://$hostPort$path"
 }
 
 fun main() {

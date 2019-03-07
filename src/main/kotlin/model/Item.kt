@@ -17,7 +17,7 @@ object Items : Table() {
 data class Item(
     val id: Int,
     val itemNumber: Int,
-    val owner: User?,
+    val owner: User? = null,
     val aquisitionDateTime: DateTime,
     var apiInfo: me.sargunvohra.lib.pokekotlin.model.Item?
 )

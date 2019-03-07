@@ -1,9 +1,9 @@
-version: '3'
+version: "3"
 services:
   backend:
-    build: .
+    build: Dockerfile
     ports:
-      - "8080:8080"
+      - 8080:8080
     env_file:
       - .env
   database:
@@ -15,12 +15,12 @@ services:
       MYSQL_PASSWORD: "${db_password}"
       MYSQL_ROOT_PASSWORD: "${db_root_password}"
     ports:
-      - "3306"
+      - "${db_port}:${db_port}"
     volumes:
-      - my-db:/var/lib/mysql
+      - data:/var/lib/mysql
   redis:
-    image: "redis:alpine"
+    image: redis:alpine
     ports:
-      - "6379"
+      - 6379
 volumes:
-  my-db:
+  data:
