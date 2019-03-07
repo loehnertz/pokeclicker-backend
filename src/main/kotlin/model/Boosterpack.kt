@@ -5,7 +5,7 @@ package model
 import service.store.data.ThinPokemon
 
 data class Boosterpack(
-    val locationAreaId: Int,
+    val locationId: Int,
     val name: String,
     val price: Long,
     val hexColor: String,

@@ -24,7 +24,13 @@ fun Route.store(storeService: StoreService) {
 
             get("/{id}") {
                 val boosterpackId = call.parameters["id"]!!
-                call.respond(storeService.getSpecificBoosterpack(boosterpackId.toInt()))
+                val boosterpack = storeService.getSpecificBoosterpack(boosterpackId.toInt())
+
+                if (boosterpack != null) {
+                    call.respond(boosterpack)
+                } else {
+                    call.respond(HttpStatusCode.NotFound)
+                }
             }
 
             get("/buy/{id}") {
