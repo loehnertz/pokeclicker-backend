@@ -1,22 +1,31 @@
 package service.user.balance
 
+import kotlinx.coroutines.delay
 import model.User
 import model.Users
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.update
 import utility.RedisFactory
+import utility.Scheduler
+import java.util.concurrent.TimeUnit
 
 class BalanceManager(val user: User) {
-    fun increaseCurrentBalance(increaseAmount: Long): Long? {
-        return redis.hincrBy(RedisKeyUserBalances, user.name, increaseAmount)
+    fun increaseCurrentBalance(increaseAmount: Long) {
+        val redis = RedisFactory.retrieveRedisClient()
+        redis.hincrBy(RedisKeyUserBalances, user.name, increaseAmount)
+        redis.close()
     }
 
-    fun incrementCurrentBalance(): Long? {
-        return increaseCurrentBalance(1)
+    fun incrementCurrentBalance() {
+        increaseCurrentBalance(1)
     }
 
     fun retrieveCurrentBalance(): Long {
+        val redis = RedisFactory.retrieveRedisClient()
+
         val currentBalance = redis.hmget(RedisKeyUserBalances, user.name).firstOrNull()?.toLong()
+
+        redis.close()
 
         return if (currentBalance != null) {
             currentBalance
@@ -26,8 +35,12 @@ class BalanceManager(val user: User) {
         }
     }
 
-    private fun setCurrentBalance(): String? {
-        return redis.hmset(RedisKeyUserBalances, mapOf(user.name to user.pokeDollars.toString()))
+    private fun setCurrentBalance() {
+        val redis = RedisFactory.retrieveRedisClient()
+
+        redis.hmset(RedisKeyUserBalances, mapOf(user.name to user.pokeDollars.toString()))
+
+        redis.close()
     }
 
     companion object {

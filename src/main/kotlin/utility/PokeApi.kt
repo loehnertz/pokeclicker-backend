@@ -10,11 +10,12 @@ object PokeApi {
     private const val RedisHashMapKeyPokemons = "pokemons"
 
     private val gson = Gson()
-    private val redis = RedisFactory.getRedisClient()
 
     val client = PokeApiClient()
 
     fun getLocationArea(id: Int): LocationArea {
+        val redis = RedisFactory.retrieveRedisClient()
+
         val cachedValue = redis.hmget(RedisHashMapKeyLocationAreas, id.toString()).firstOrNull()
         if (cachedValue != null) return gson.fromJson(cachedValue, LocationArea::class.java)
 
@@ -22,16 +23,22 @@ object PokeApi {
 
         redis.hmset(RedisHashMapKeyLocationAreas, mapOf(id.toString() to gson.toJson(locationArea)))
 
+        redis.close()
+
         return locationArea
     }
 
     fun getPokemon(id: Int): Pokemon {
+        val redis = RedisFactory.retrieveRedisClient()
+
         val cachedValue = redis.hmget(RedisHashMapKeyPokemons, id.toString()).firstOrNull()
         if (cachedValue != null) return gson.fromJson(cachedValue, Pokemon::class.java)
 
         val pokemon = client.getPokemon(id)
 
         redis.hmset(RedisHashMapKeyPokemons, mapOf(id.toString() to gson.toJson(pokemon)))
+
+        redis.close()
 
         return pokemon
     }

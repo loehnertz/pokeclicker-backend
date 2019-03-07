@@ -1,5 +1,8 @@
 package service.user.balance
 
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import model.User
 import model.Users
 import model.toUser
@@ -7,6 +10,7 @@ import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
 import utility.RedisFactory
 import utility.Scheduler
+import java.util.concurrent.TimeUnit
 
 class BalanceIncreaser(val user: User) {
     fun increaseBalanceBasedOnIncreaseRate() {
@@ -17,27 +21,31 @@ class BalanceIncreaser(val user: User) {
         }
     }
 
-    private fun calculateBalanceIncreaseSinceLastTick(currentIncreaseRatePerMinute: Long): Long {
-        return currentIncreaseRatePerMinute * Scheduler.BalanceIncreaseTimeoutInMinutes
-    }
-
     fun updateIncreaseRate() {
-        val increaseRatePerMinute = calculateIncreaseRatePerMinute()
+        val redis = RedisFactory.retrieveRedisClient()
+
+        val increaseRatePerMinute = calculateIncreaseRatePerSecond()
         redis.hmset(RedisHashMapKeyIncreaseRates, mapOf(user.name to increaseRatePerMinute.toString()))
+
+        redis.close()
     }
 
     private fun retrieveIncreaseRate(): Long? {
-        return redis.hmget(RedisHashMapKeyIncreaseRates, user.name).firstOrNull()?.toLong()
+        val redis = RedisFactory.retrieveRedisClient()
+
+        val increaseRate = redis.hmget(RedisHashMapKeyIncreaseRates, user.name).firstOrNull()
+
+        redis.close()
+
+        return increaseRate?.toLong()
     }
 
-    private fun calculateIncreaseRatePerMinute(): Long {
+    private fun calculateIncreaseRatePerSecond(): Long {
         return 60  // TODO: Implement this
     }
 
     companion object {
         private const val RedisHashMapKeyIncreaseRates = "gather_rates"
-
-        private val redis = RedisFactory.getRedisClient()
 
         fun increaseBalanceBasedOnIncreaseRateOfEveryUser() {
             retrieveAllUsers().forEach { BalanceIncreaser(it).increaseBalanceBasedOnIncreaseRate() }
