@@ -23,7 +23,7 @@ class BalanceManager(val user: User) {
         return if (currentBalance != null) {
             currentBalance
         } else {
-            setCurrentBalance()
+            setCurrentBalance(user.pokeDollars)
             user.pokeDollars
         }
     }
@@ -36,10 +36,10 @@ class BalanceManager(val user: User) {
         }
     }
 
-    private fun setCurrentBalance() {
+    private fun setCurrentBalance(value: Long) {
         val redis = RedisFactory.retrieveRedisClient()
 
-        redis.hmset(RedisKeyUserBalances, mapOf(user.name to user.pokeDollars.toString()))
+        redis.hmset(RedisKeyUserBalances, mapOf(user.name to value.toString()))
 
         redis.close()
     }
