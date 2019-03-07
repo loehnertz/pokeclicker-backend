@@ -55,17 +55,13 @@ fun Route.user(userService: UserService) {
         }
 
         get("/{id}") {
-            val id = call.parameters["id"]
-            if (id != null) {
-                call.respond(Users.getUser(id.toInt()))
-            }
+            val id = call.parameters["id"]!!
+            call.respond(Users.getUser(id.toInt()))
         }
 
         get("/{id}/pokemon") {
-            val id = call.parameters["id"]
-            if (id != null) {
-                call.respond(userService.getUserPokemon(id.toInt()))
-            }
+            val id = call.parameters["id"]!!
+            call.respond(userService.getUserPokemon(id.toInt()))
         }
 
         webSocket("/balance") {
