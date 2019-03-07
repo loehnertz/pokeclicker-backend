@@ -6,14 +6,14 @@ import me.sargunvohra.lib.pokekotlin.model.LocationArea
 import me.sargunvohra.lib.pokekotlin.model.Pokemon
 import redis.clients.jedis.Jedis
 
-const val RedisHashMapKeyLocationAreas = "locationAreas"
-const val RedisHashMapKeyPokemons = "pokemons"
-
 object PokeApi {
-    val client = PokeApiClient()
+    private const val RedisHashMapKeyLocationAreas = "locationAreas"
+    private const val RedisHashMapKeyPokemons = "pokemons"
 
     private val gson = Gson()
     private val redis = Jedis(System.getenv("redis_host"))
+
+    val client = PokeApiClient()
 
     fun getLocationArea(id: Int): LocationArea {
         val cachedValue = redis.hmget(RedisHashMapKeyLocationAreas, id.toString()).firstOrNull()
