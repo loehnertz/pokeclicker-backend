@@ -21,6 +21,7 @@ import service.store.StoreService
 import service.user.UserService
 import service.pokemon.PokemonService
 import utility.DatabaseFactory
+import utility.Scheduler
 
 fun Application.module() {
     install(DefaultHeaders)
@@ -43,6 +44,8 @@ fun Application.module() {
     }
 
     DatabaseFactory.init()
+
+    Scheduler.scheduleRecurringTasks()
 
     install(Routing) {
         user(UserService())

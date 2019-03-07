@@ -12,7 +12,7 @@ object PokeApiAdapter {
                 Pokemons.select{Pokemons.id eq dbId}.firstOrNull()
             } ?: throw NotFoundException("No Pokemon with ID '$dbId' exists")
         )
-        pokemon.apiInfo = PokeApi.client.getPokemon(pokemon.pokeNumber)
+        pokemon.fatApiInfo = PokeApi.client.getPokemon(pokemon.pokeNumber)
 
         return pokemon
     }

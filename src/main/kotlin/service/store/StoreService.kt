@@ -1,44 +1,51 @@
 package service.store
 
 import io.ktor.features.BadRequestException
-import me.sargunvohra.lib.pokekotlin.model.Pokemon
-import me.sargunvohra.lib.pokekotlin.model.PokemonEncounter
+import io.ktor.features.NotFoundException
 import model.*
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.joda.time.DateTime
+import service.store.data.ThinPokemon
 import utility.PokeApi
 
 const val BoosterpackSize = 5
+const val BasePriceFactor = 1.0 / 55.0
+const val LocationIdBaseIncrease = 1.25
+const val BoosterpackAmountLimit = 25
 
 class StoreService {
     fun getAllBoosterpacks(): List<Boosterpack> {
-        val locationAreas = PokeApi.client.getLocationAreaList(0, 55).results
-
-        return locationAreas.map { getSpecificBoosterpack(it.id) }
+        return PokeApi.client.getLocationList(0, BoosterpackAmountLimit).results.mapNotNull { getSpecificBoosterpack(it.id) }
     }
 
-    fun getSpecificBoosterpack(id: Int): Boosterpack {
-        val locationArea = PokeApi.getLocationArea(id)
+    fun getSpecificBoosterpack(id: Int): Boosterpack? {
+        val location = PokeApi.getLocation(id)
+        val pokemonsInLocation = PokeApi.getPokemonsOfLocation(location)
+        if (pokemonsInLocation.isEmpty()) return null
+
+        val price = determineBoosterpackPrice(pokemonsInLocation, location.id)
+        pokemonsInLocation.forEach { it.xp = ((it.xp * price).toInt()) }
 
         return Boosterpack(
-            name = capitalizeLocationName(locationArea.name),
-            price = determineBoosterpackPrice(locationArea.gameIndex),
-            locationAreaId = locationArea.id,
-            hexColor = determineHexColorBasedOnLocationName(locationArea.gameIndex)
+            name = capitalizeLocationName(location.name),
+            price = determineBoosterpackPrice(pokemonsInLocation, location.id),
+            locationId = location.id,
+            hexColor = determineHexColorBasedOnLocationId(location.id),
+            pokemons = pokemonsInLocation
         )
     }
 
     fun buyBoosterpack(boosterpackId: Int, user: User): List<model.Pokemon> {
         // Retrieve the information necessary to open a new boosterpack
         val boosterpack = getSpecificBoosterpack(boosterpackId)
-        val locationArea = PokeApi.getLocationArea(boosterpackId)
+            ?: throw NotFoundException("A boosterpack with this ID does not exist")
 
         // Check if user has enough money
         if (user.pokeDollars < boosterpack.price) throw BadRequestException("User does not own enough PokéDollars")
 
         // Open the booster pack
-        val receivedPokemons = openBoosterpack(locationArea.pokemonEncounters)
+        val receivedPokemons = openBoosterpack(boosterpack.pokemons)
 
         // Insert the received Pokemon into the database
         val insertedPokemons = insertReceivedPokemon(receivedPokemons, user)
@@ -49,16 +56,16 @@ class StoreService {
         return insertedPokemons
     }
 
-    private fun openBoosterpack(pokemonEncounters: List<PokemonEncounter>): List<Pokemon> {
-        val pokemons = pokemonEncounters.map { PokeApi.getPokemon(it.pokemon.id) }.sortedBy { it.baseExperience }.asReversed()
+    private fun openBoosterpack(pokemons: List<ThinPokemon>): List<ThinPokemon> {
+        val sortedPokemons = pokemons.sortedBy { it.xp }.asReversed()
 
-        val possiblePokemons = arrayListOf<Pokemon>()
-        pokemons.forEachIndexed { index, pokemon -> repeat(index + 1) { possiblePokemons.add(pokemon) } }
+        val possiblePokemons = arrayListOf<ThinPokemon>()
+        sortedPokemons.forEachIndexed { index, pokemon -> repeat(index + 1) { possiblePokemons.add(pokemon) } }
 
         return possiblePokemons.shuffled().take(BoosterpackSize)
     }
 
-    private fun insertReceivedPokemon(drawnPokemons: List<Pokemon>, user: User): List<model.Pokemon> {
+    private fun insertReceivedPokemon(drawnPokemons: List<ThinPokemon>, user: User): List<model.Pokemon> {
         val receivedPokemons = arrayListOf<model.Pokemon>()
 
         transaction {
@@ -66,7 +73,7 @@ class StoreService {
                 val insertedPokemon = Pokemons.insert {
                     it[pokeNumber] = pokemon.id
                     it[owner] = user.id
-                    it[xp] = pokemon.baseExperience
+                    it[xp] = pokemon.xp
                     it[aquisitionDateTime] = DateTime()
                 }
 
@@ -74,9 +81,9 @@ class StoreService {
                     model.Pokemon(
                         id = insertedPokemon.resultedValues!!.first()[Pokemons.id],
                         pokeNumber = pokemon.id,
-                        xp = pokemon.baseExperience,
+                        xp = pokemon.xp,
                         aquisitionDateTime = DateTime(),
-                        apiInfo = pokemon
+                        thinApiInfo = pokemon
                     )
                 )
             }
@@ -89,13 +96,14 @@ class StoreService {
         return locationName.split("-").joinToString(" ") { it.capitalize() }
     }
 
-    private fun determineBoosterpackPrice(gameIndex: Int): Long {
-        return Math.pow(gameIndex.toDouble(), 2.0).toLong()
+    private fun determineBoosterpackPrice(pokemonsInLocation: List<ThinPokemon>, locationId: Int): Long {
+        val basePrice = (pokemonsInLocation.fold(0) { sum, pokemon -> sum + pokemon.xp } / pokemonsInLocation.size) * BoosterpackSize
+        return (basePrice * BasePriceFactor * Math.pow(LocationIdBaseIncrease, locationId.toDouble())).toLong()
     }
 
-    private fun determineHexColorBasedOnLocationName(gameIndex: Int): String {
-        var s0 = (Math.sqrt(5.0) * gameIndex * 0x1000000).toLong()
-        val s1 = gameIndex.toLong()
+    private fun determineHexColorBasedOnLocationId(locationId: Int): String {
+        var s0 = (Math.sqrt(5.0) * locationId * 0x1000000).toLong()
+        val s1 = locationId.toLong()
 
         s0 = s0 xor (s0 shl 23)
         s0 = s0 xor s0.ushr(17)
