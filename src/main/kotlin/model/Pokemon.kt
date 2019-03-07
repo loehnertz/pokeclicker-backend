@@ -4,6 +4,7 @@ import org.jetbrains.exposed.sql.ReferenceOption
 import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.Table
 import org.joda.time.DateTime
+import utility.PokeApi
 
 object Pokemons : Table() {
     val id = integer("id").primaryKey().autoIncrement()
@@ -29,6 +30,6 @@ fun Pokemons.toPokemon(row: ResultRow): Pokemon {
         owner = Users.getUser(row[Pokemons.owner]),
         xp = row[Pokemons.xp],
         aquisitionDateTime = row[Pokemons.aquisitionDateTime],
-        apiInfo = null
+        apiInfo = PokeApi.getPokemon(row[Pokemons.id])
     )
 }
