@@ -24,6 +24,8 @@ import service.user.authorization.TokenMissingException
 import service.user.balance.BalanceIncreaseRateManager
 import service.user.data.UserLoginRequest
 import service.user.data.UserRegistrationRequest
+import service.user.session.SessionLockAlreadyAcquired
+import service.user.session.SessionSemaphore
 import utility.Scheduler
 import java.util.concurrent.TimeUnit
 
@@ -62,6 +64,8 @@ fun Route.user(userService: UserService) {
                 val balanceManager = userService.buildBalanceManager(user)
                 val balanceIncreaseRateManager = BalanceIncreaseRateManager(user)
 
+                SessionSemaphore.acquireBalanceSession(user)
+
                 try {
                     while (true) {
                         balanceIncreaseRateManager.increaseBalanceBasedOnIncreaseRate(balanceManager)
@@ -75,6 +79,7 @@ fun Route.user(userService: UserService) {
                     close(CloseReason(CloseReason.Codes.UNEXPECTED_CONDITION, message = WebSocketClosedByExceptionMessage))
                 } finally {
                     balanceManager.syncCurrentBalanceToDatabase()
+                    SessionSemaphore.releaseBalanceSession(user)
                 }
             } catch (exception: TokenExpiredException) {
                 call.respond(exception.message)
@@ -88,28 +93,36 @@ fun Route.user(userService: UserService) {
                 val user = TokenManager.verifyTokenAndRetrieveUser(call.parameters)
                 val balanceManager = userService.buildBalanceManager(user)
 
-                incoming.mapNotNull { it as? Frame.Text }.consumeEach { frame ->
-                    val text = frame.readText()
+                SessionSemaphore.acquireClickingSession(user)
 
-                    when {
-                        text.equals(WebSocketClickingKeyword, ignoreCase = true) -> {
-                            balanceManager.increaseCurrentBalance()
-                            outgoing.send(Frame.Text(WebSocketClickingMessage))
+                try {
+                    incoming.mapNotNull { it as? Frame.Text }.consumeEach { frame ->
+                        val text = frame.readText()
+
+                        when {
+                            text.equals(WebSocketClickingKeyword, ignoreCase = true) -> {
+                                balanceManager.increaseCurrentBalance()
+                                outgoing.send(Frame.Text(WebSocketClickingMessage))
+                            }
+                            text.equals(WebSocketClosingKeyword, ignoreCase = true) -> {
+                                outgoing.send(Frame.Text(WebSocketClosedByClientMessage))
+                                close(CloseReason(CloseReason.Codes.NORMAL, message = WebSocketClosedByClientMessage))
+                            }
+                            else -> outgoing.send(Frame.Text(WebSocketUnknownCommandMessage))
                         }
-                        text.equals(WebSocketClosingKeyword, ignoreCase = true) -> {
-                            outgoing.send(Frame.Text(WebSocketClosedByClientMessage))
-                            close(CloseReason(CloseReason.Codes.NORMAL, message = WebSocketClosedByClientMessage))
-                        }
-                        else -> outgoing.send(Frame.Text(WebSocketUnknownCommandMessage))
                     }
+                } catch (exception: Exception) {
+                    // TODO: Add logging here
+                    close(CloseReason(CloseReason.Codes.UNEXPECTED_CONDITION, message = WebSocketClosedByExceptionMessage))
+                } finally {
+                    SessionSemaphore.releaseClickingSession(user)
                 }
             } catch (exception: TokenExpiredException) {
                 call.respond(exception.message)
             } catch (exception: TokenMissingException) {
                 call.respond(exception.message)
-            } catch (exception: Exception) {
-                // TODO: Add logging here
-                close(CloseReason(CloseReason.Codes.UNEXPECTED_CONDITION, message = WebSocketClosedByExceptionMessage))
+            } catch (exception: SessionLockAlreadyAcquired) {
+                call.respond(exception.message)
             }
         }
     }
