@@ -3,15 +3,17 @@ package resource
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.ktor.application.call
+import io.ktor.features.BadRequestException
 import io.ktor.http.HttpStatusCode
 import io.ktor.response.respond
 import io.ktor.routing.Route
 import io.ktor.routing.get
 import io.ktor.routing.route
-import io.ktor.sessions.get
-import io.ktor.sessions.sessions
-import main.Session
-import service.StoreService
+import resource.data.Response
+import service.store.StoreService
+import service.user.authorization.TokenExpiredException
+import service.user.authorization.TokenManager
+import service.user.authorization.TokenMissingException
 
 fun Route.store(storeService: StoreService) {
     route("/store") {
@@ -21,28 +23,24 @@ fun Route.store(storeService: StoreService) {
             }
 
             get("/{id}") {
-                val boosterpackId = call.parameters["id"]
-
-                if (boosterpackId != null) {
-                    call.respond(storeService.getSpecificBoosterpack(boosterpackId.toInt()))
-                } else {
-                    call.respond("No ID was specified")
-                }
+                val boosterpackId = call.parameters["id"]!!
+                call.respond(storeService.getSpecificBoosterpack(boosterpackId.toInt()))
             }
 
             get("/buy/{id}") {
-                val boosterpackId = call.parameters["id"]
-
-                val session: Session? = call.sessions.get<Session>()
-
-                if (boosterpackId != null) {
-                    if (session != null) {
-                        call.respond(storeService.buyBoosterpack(boosterpackId.toInt(), session.userId.toInt()))
-                    } else {
-                        call.respond(HttpStatusCode.Unauthorized, "You are not logged in at the moment")
-                    }
-                } else {
-                    call.respond(HttpStatusCode.BadRequest, "No ID was specified")
+                try {
+                    val boosterpackId = call.parameters["id"]!!
+                    val user = TokenManager.verifyTokenAndRetrieveUser(call.request.headers)
+                    call.respond(storeService.buyBoosterpack(boosterpackId.toInt(), user))
+                } catch (exception: TokenExpiredException) {
+                    call.respond(exception.message)
+                } catch (exception: TokenMissingException) {
+                    call.respond(exception.message)
+                } catch (exception: BadRequestException) {
+                    call.respond(HttpStatusCode.BadRequest, Response(error = exception.localizedMessage))
+                } catch (exception: Exception) {
+                    // TODO: Add logging here
+                    throw exception
                 }
             }
         }
