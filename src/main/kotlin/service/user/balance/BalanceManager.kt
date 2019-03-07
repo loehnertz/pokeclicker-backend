@@ -46,17 +46,23 @@ class BalanceManager(val user: User) {
     companion object {
         private const val RedisKeyUserBalances = "balances"
 
-        private val redis = RedisFactory.getRedisClient()
+        suspend fun syncAllCurrentBalancesToDatabase() {
+            while (true) {
+                val redis = RedisFactory.retrieveRedisClient()
 
-        fun syncAllCurrentBalancesToDatabase() {
-            val allBalances = redis.hgetAll(RedisKeyUserBalances)
+                val allBalances = redis.hgetAll(RedisKeyUserBalances)
 
-            for ((username, currentBalance) in allBalances) {
-                transaction {
-                    Users.update({ Users.name eq username }) {
-                        it[pokeDollars] = currentBalance.toLong()
+                redis.close()
+
+                for ((username, currentBalance) in allBalances) {
+                    transaction {
+                        Users.update({ Users.name eq username }) {
+                            it[pokeDollars] = currentBalance.toLong()
+                        }
                     }
                 }
+
+                delay(TimeUnit.MINUTES.toMillis(Scheduler.BalanceSyncTimeoutInMinutes))
             }
         }
     }

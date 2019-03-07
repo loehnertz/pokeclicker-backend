@@ -13,11 +13,12 @@ import utility.Scheduler
 import java.util.concurrent.TimeUnit
 
 class BalanceIncreaser(val user: User) {
-    fun increaseBalanceBasedOnIncreaseRate() {
-        val currentIncreaseRatePerMinute = retrieveIncreaseRate()
-        if (currentIncreaseRatePerMinute != null) {
-            val balanceIncreaseSinceLastTick = calculateBalanceIncreaseSinceLastTick(currentIncreaseRatePerMinute)
-            BalanceManager(user).increaseCurrentBalance(balanceIncreaseSinceLastTick)
+    suspend fun increaseBalanceBasedOnIncreaseRate() {
+        val balanceManager = BalanceManager(user)
+        while (true) {
+            val currentIncreaseRatePerMinute = retrieveIncreaseRate()
+            if (currentIncreaseRatePerMinute != null) balanceManager.increaseCurrentBalance(currentIncreaseRatePerMinute)
+            delay(TimeUnit.SECONDS.toMillis(Scheduler.BalanceIncreaseTimeoutInSeconds))
         }
     }
 
@@ -48,11 +49,14 @@ class BalanceIncreaser(val user: User) {
         private const val RedisHashMapKeyIncreaseRates = "gather_rates"
 
         fun increaseBalanceBasedOnIncreaseRateOfEveryUser() {
-            retrieveAllUsers().forEach { BalanceIncreaser(it).increaseBalanceBasedOnIncreaseRate() }
+            retrieveAllUsers().forEach { GlobalScope.launch { BalanceIncreaser(it).increaseBalanceBasedOnIncreaseRate() } }
         }
 
-        fun updateIncreaseRateOfEveryUser() {
-            retrieveAllUsers().forEach { BalanceIncreaser(it).updateIncreaseRate() }
+        suspend fun updateIncreaseRateOfEveryUser() {
+            while (true) {
+                retrieveAllUsers().forEach { BalanceIncreaser(it).updateIncreaseRate() }
+                delay(TimeUnit.SECONDS.toMillis(Scheduler.BalanceIncreaseSyncTimeoutInSeconds))
+            }
         }
 
         private fun retrieveAllUsers(): List<User> {
