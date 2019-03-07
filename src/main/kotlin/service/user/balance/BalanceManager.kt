@@ -1,23 +1,16 @@
 package service.user.balance
 
-import kotlinx.coroutines.delay
 import model.User
 import model.Users
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.update
 import utility.RedisFactory
-import utility.Scheduler
-import java.util.concurrent.TimeUnit
 
 class BalanceManager(val user: User) {
-    fun increaseCurrentBalance(increaseAmount: Long) {
+    fun increaseCurrentBalance(increaseAmount: Long = 1) {
         val redis = RedisFactory.retrieveRedisClient()
         redis.hincrBy(RedisKeyUserBalances, user.name, increaseAmount)
         redis.close()
-    }
-
-    fun incrementCurrentBalance() {
-        increaseCurrentBalance(1)
     }
 
     fun retrieveCurrentBalance(): Long {
@@ -35,6 +28,14 @@ class BalanceManager(val user: User) {
         }
     }
 
+    fun syncCurrentBalanceToDatabase() {
+        transaction {
+            Users.update({ Users.name eq user.name }) {
+                it[pokeDollars] = retrieveCurrentBalance()
+            }
+        }
+    }
+
     private fun setCurrentBalance() {
         val redis = RedisFactory.retrieveRedisClient()
 
@@ -45,25 +46,5 @@ class BalanceManager(val user: User) {
 
     companion object {
         private const val RedisKeyUserBalances = "balances"
-
-        suspend fun syncAllCurrentBalancesToDatabase() {
-            while (true) {
-                val redis = RedisFactory.retrieveRedisClient()
-
-                val allBalances = redis.hgetAll(RedisKeyUserBalances)
-
-                redis.close()
-
-                for ((username, currentBalance) in allBalances) {
-                    transaction {
-                        Users.update({ Users.name eq username }) {
-                            it[pokeDollars] = currentBalance.toLong()
-                        }
-                    }
-                }
-
-                delay(TimeUnit.MINUTES.toMillis(Scheduler.BalanceSyncTimeoutInMinutes))
-            }
-        }
     }
 }

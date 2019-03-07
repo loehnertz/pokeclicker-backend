@@ -21,6 +21,7 @@ import service.user.UserService
 import service.user.authorization.TokenExpiredException
 import service.user.authorization.TokenManager
 import service.user.authorization.TokenMissingException
+import service.user.balance.BalanceIncreaseRateManager
 import service.user.data.UserLoginRequest
 import service.user.data.UserRegistrationRequest
 import utility.Scheduler
@@ -29,7 +30,8 @@ import java.util.concurrent.TimeUnit
 const val WebSocketClickingKeyword = "click"
 const val WebSocketClosingKeyword = "bye"
 const val WebSocketClickingMessage = "Click successfully received"
-const val WebSocketClosingMessage = "Connection closed by client"
+const val WebSocketClosedByClientMessage = "Connection closed by client"
+const val WebSocketClosedByExceptionMessage = "An exception occurred, please reopen the socket"
 const val WebSocketUnknownCommandMessage = "The received command is unknown"
 
 fun Route.user(userService: UserService) {
@@ -58,19 +60,26 @@ fun Route.user(userService: UserService) {
             try {
                 val user = TokenManager.verifyTokenAndRetrieveUser(call.parameters)
                 val balanceManager = userService.buildBalanceManager(user)
+                val balanceIncreaseRateManager = BalanceIncreaseRateManager(user)
 
-                while (true) {
-                    val currentBalance = balanceManager.retrieveCurrentBalance()
-                    outgoing.send(Frame.Text(currentBalance.toString()))
-                    delay(TimeUnit.SECONDS.toMillis(Scheduler.BalanceIncreaseTimeoutInSeconds))
+                try {
+                    while (true) {
+                        balanceIncreaseRateManager.increaseBalanceBasedOnIncreaseRate(balanceManager)
+
+                        val currentBalance = balanceManager.retrieveCurrentBalance()
+                        outgoing.send(Frame.Text(currentBalance.toString()))
+
+                        delay(TimeUnit.SECONDS.toMillis(Scheduler.BalanceIncreaseTimeoutInSeconds))
+                    }
+                } catch (exception: Exception) {
+                    close(CloseReason(CloseReason.Codes.UNEXPECTED_CONDITION, message = WebSocketClosedByExceptionMessage))
+                } finally {
+                    balanceManager.syncCurrentBalanceToDatabase()
                 }
             } catch (exception: TokenExpiredException) {
                 call.respond(exception.message)
             } catch (exception: TokenMissingException) {
                 call.respond(exception.message)
-            } catch (exception: Exception) {
-                // TODO: Add logging here
-                throw exception
             }
         }
 
@@ -84,12 +93,12 @@ fun Route.user(userService: UserService) {
 
                     when {
                         text.equals(WebSocketClickingKeyword, ignoreCase = true) -> {
-                            balanceManager.incrementCurrentBalance()
+                            balanceManager.increaseCurrentBalance()
                             outgoing.send(Frame.Text(WebSocketClickingMessage))
                         }
                         text.equals(WebSocketClosingKeyword, ignoreCase = true) -> {
-                            outgoing.send(Frame.Text(WebSocketClosingMessage))
-                            close(CloseReason(CloseReason.Codes.NORMAL, message = WebSocketClosingMessage))
+                            outgoing.send(Frame.Text(WebSocketClosedByClientMessage))
+                            close(CloseReason(CloseReason.Codes.NORMAL, message = WebSocketClosedByClientMessage))
                         }
                         else -> outgoing.send(Frame.Text(WebSocketUnknownCommandMessage))
                     }
@@ -100,7 +109,7 @@ fun Route.user(userService: UserService) {
                 call.respond(exception.message)
             } catch (exception: Exception) {
                 // TODO: Add logging here
-                throw exception
+                close(CloseReason(CloseReason.Codes.UNEXPECTED_CONDITION, message = WebSocketClosedByExceptionMessage))
             }
         }
     }
