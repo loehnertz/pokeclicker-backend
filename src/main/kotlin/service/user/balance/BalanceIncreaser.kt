@@ -48,7 +48,7 @@ class BalanceIncreaser(val user: User) {
         }
 
         private fun retrieveAllUsers(): List<User> {
-            return transaction { Users.selectAll() }.map { Users.toUser(it) }
+            return transaction { Users.selectAll().map { Users.toUser(it) } }
         }
     }
 }
