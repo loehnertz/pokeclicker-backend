@@ -7,6 +7,7 @@ import model.*
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.joda.time.DateTime
+import service.user.balance.BalanceIncreaseRateManager
 import utility.PokeApi
 
 const val BoosterpackSize = 5
@@ -45,6 +46,8 @@ class StoreService {
 
         // Subtract the booster pack price from the user's account balance
         Users.subtractPokeDollarsFromBalance(user.id, boosterpack.price)
+
+        BalanceIncreaseRateManager(user).updateIncreaseRate()
 
         return insertedPokemons
     }
