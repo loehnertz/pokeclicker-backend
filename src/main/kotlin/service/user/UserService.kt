@@ -1,12 +1,10 @@
 package service.user
 
 import model.Pokemons
+import model.User
 import model.toPokemon
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.transaction
-import model.User
-
 import service.user.authentication.Login
 import service.user.authentication.Registration
 import service.user.balance.BalanceManager
@@ -24,12 +22,7 @@ class UserService {
     }
 
     fun getUserPokemon(userId: Int): List<model.Pokemon> {
-
-        val ownedPokemons = transaction {
-            model.Pokemons.select{Pokemons.owner eq userId}.map{model.Pokemons.toPokemon(it)}
-        }
-
-        return ownedPokemons
+        return transaction { Pokemons.select { Pokemons.owner eq userId }.map { Pokemons.toPokemon(it) } }
     }
 
     fun buildBalanceManager(user: User): BalanceManager {

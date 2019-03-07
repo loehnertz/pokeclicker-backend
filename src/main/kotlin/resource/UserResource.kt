@@ -14,12 +14,12 @@ import io.ktor.routing.Route
 import io.ktor.routing.get
 import io.ktor.routing.post
 import io.ktor.routing.route
-import model.Users
-import model.getUser
 import io.ktor.websocket.webSocket
 import kotlinx.coroutines.channels.consumeEach
 import kotlinx.coroutines.channels.mapNotNull
 import kotlinx.coroutines.delay
+import model.Users
+import model.getUser
 import service.user.UserService
 import service.user.authorization.TokenManager
 import service.user.data.UserLoginRequest
