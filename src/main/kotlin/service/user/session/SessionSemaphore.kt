@@ -35,6 +35,11 @@ object SessionSemaphore {
         }
     }
 
+    fun releaseAllSessions(user: User) {
+        releaseBalanceSession(user)
+        releaseClickingSession(user)
+    }
+
     private fun generateRedisKey(baseKey: String, user: User): String {
         return "$baseKey:${user.name}"
     }
