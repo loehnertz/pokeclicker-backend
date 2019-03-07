@@ -82,9 +82,11 @@ fun Route.user(userService: UserService) {
                     SessionSemaphore.releaseBalanceSession(user)
                 }
             } catch (exception: TokenExpiredException) {
-                call.respond(exception.message)
+                close(CloseReason(CloseReason.Codes.CANNOT_ACCEPT, message = exception.message))
             } catch (exception: TokenMissingException) {
-                call.respond(exception.message)
+                close(CloseReason(CloseReason.Codes.CANNOT_ACCEPT, message = exception.message))
+            } catch (exception: SessionLockAlreadyAcquired) {
+                close(CloseReason(CloseReason.Codes.VIOLATED_POLICY, message = exception.message))
             }
         }
 
@@ -118,11 +120,11 @@ fun Route.user(userService: UserService) {
                     SessionSemaphore.releaseClickingSession(user)
                 }
             } catch (exception: TokenExpiredException) {
-                call.respond(exception.message)
+                close(CloseReason(CloseReason.Codes.CANNOT_ACCEPT, message = exception.message))
             } catch (exception: TokenMissingException) {
-                call.respond(exception.message)
+                close(CloseReason(CloseReason.Codes.CANNOT_ACCEPT, message = exception.message))
             } catch (exception: SessionLockAlreadyAcquired) {
-                call.respond(exception.message)
+                close(CloseReason(CloseReason.Codes.VIOLATED_POLICY, message = exception.message))
             }
         }
     }
