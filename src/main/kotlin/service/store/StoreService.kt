@@ -95,8 +95,9 @@ class StoreService {
         return locationName.split("-").joinToString(" ") { it.capitalize() }
     }
 
-    private fun determineBoosterpackPrice(gameIndex: Int): Long {
-        return Math.pow(gameIndex.toDouble(), 2.0).toLong()
+    private fun determineBoosterpackPrice(pokemonsInLocation: List<ThinPokemon>, locationId: Int): Long {
+        val basePrice = (pokemonsInLocation.fold(0) { sum, pokemon -> sum + pokemon.xp } / pokemonsInLocation.size) * BoosterpackSize
+        return (basePrice * BasePriceFactor * Math.pow(LocationIdBaseIncrease, locationId.toDouble())).toLong()
     }
 
     private fun determineHexColorBasedOnLocationName(gameIndex: Int): String {
