@@ -1,15 +1,16 @@
 package utility
 
+import io.ktor.features.NotFoundException
 import model.*
 import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.transaction
 
-class PokeApiAdapter {
+object PokeApiAdapter {
     fun getPokemonData(dbId: Int): Pokemon {
         val pokemon = Pokemons.toPokemon(
             transaction {
-                Pokemons.select { Pokemons.id eq dbId }.first()
-            }
+                Pokemons.select { Pokemons.id eq dbId }.firstOrNull()
+            } ?: throw NotFoundException("No Pokemon with ID '$dbId' exists")
         )
         pokemon.fatApiInfo = PokeApi.client.getPokemon(pokemon.pokeNumber)
 

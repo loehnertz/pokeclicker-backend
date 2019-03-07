@@ -22,8 +22,12 @@ object PokeApi {
         if (cachedValue != null) return gson.fromJson(cachedValue, ThinPokemon::class.java)
 
         val pokemon = client.getPokemon(id)
-        val thinPokemon = ThinPokemon(pokemon.id, pokemon.name.capitalize(), pokemon.baseExperience, pokemon.sprites.frontDefault
-            ?: pokemon.sprites.frontShiny)
+        val thinPokemon = ThinPokemon(
+            id = pokemon.id,
+            name = pokemon.name.capitalize(),
+            xp = pokemon.baseExperience,
+            sprite = pokemon.sprites.frontDefault ?: pokemon.sprites.frontShiny
+        )
 
         redis.hmset(RedisHashMapKeyPokemons, mapOf(id.toString() to gson.toJson(thinPokemon)))
 
