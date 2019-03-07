@@ -13,23 +13,5 @@ import io.ktor.routing.route
 import service.PokemonService
 
 fun Route.pokemon(pokemonService: PokemonService) {
-    route("/pokemon") {
-        get("/{id}") {
-            val id = call.parameters["id"]
-            if (id != null) {
-                call.respond(pokemonService.getDBPokemon(id.toInt()))
-            }
-        }
 
-        get("/pokedex/{id}") {
-            val id = call.parameters["id"]
-            if (id != null) {
-                call.respond(pokemonService.getPokedexPokemon(id.toInt()))
-            }
-        }
-    }
-
-    val mapper = jacksonObjectMapper().apply {
-        setSerializationInclusion(JsonInclude.Include.NON_NULL)
-    }
 }
