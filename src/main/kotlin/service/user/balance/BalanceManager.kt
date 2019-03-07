@@ -7,8 +7,12 @@ import org.jetbrains.exposed.sql.update
 import utility.RedisFactory
 
 class BalanceManager(val user: User) {
-    fun increaseCurrentBalance(increaseAmount: Long = 1): Long? {
+    fun increaseCurrentBalance(increaseAmount: Long): Long? {
         return redis.hincrBy(RedisKeyUserBalances, user.name, increaseAmount)
+    }
+
+    fun incrementCurrentBalance(): Long? {
+        return increaseCurrentBalance(1)
     }
 
     fun retrieveCurrentBalance(): Long {
