@@ -81,12 +81,13 @@ fun Route.user(userService: UserService) {
                     balanceManager.syncCurrentBalanceToDatabase()
                     SessionSemaphore.releaseBalanceSession(user)
                 }
-            } catch (exception: TokenExpiredException) {
-                close(CloseReason(CloseReason.Codes.CANNOT_ACCEPT, message = exception.message))
-            } catch (exception: TokenMissingException) {
-                close(CloseReason(CloseReason.Codes.CANNOT_ACCEPT, message = exception.message))
-            } catch (exception: SessionLockAlreadyAcquired) {
-                close(CloseReason(CloseReason.Codes.VIOLATED_POLICY, message = exception.message))
+            } catch (exception: Exception) {
+                when (exception) {
+                    is TokenExpiredException -> close(CloseReason(CloseReason.Codes.CANNOT_ACCEPT, message = exception.message))
+                    is TokenMissingException -> close(CloseReason(CloseReason.Codes.CANNOT_ACCEPT, message = exception.message))
+                    is SessionLockAlreadyAcquired -> close(CloseReason(CloseReason.Codes.VIOLATED_POLICY, message = exception.message))
+                    else -> throw exception
+                }
             }
         }
 
@@ -119,12 +120,13 @@ fun Route.user(userService: UserService) {
                 } finally {
                     SessionSemaphore.releaseClickingSession(user)
                 }
-            } catch (exception: TokenExpiredException) {
-                close(CloseReason(CloseReason.Codes.CANNOT_ACCEPT, message = exception.message))
-            } catch (exception: TokenMissingException) {
-                close(CloseReason(CloseReason.Codes.CANNOT_ACCEPT, message = exception.message))
-            } catch (exception: SessionLockAlreadyAcquired) {
-                close(CloseReason(CloseReason.Codes.VIOLATED_POLICY, message = exception.message))
+            } catch (exception: Exception) {
+                when (exception) {
+                    is TokenExpiredException -> close(CloseReason(CloseReason.Codes.CANNOT_ACCEPT, message = exception.message))
+                    is TokenMissingException -> close(CloseReason(CloseReason.Codes.CANNOT_ACCEPT, message = exception.message))
+                    is SessionLockAlreadyAcquired -> close(CloseReason(CloseReason.Codes.VIOLATED_POLICY, message = exception.message))
+                    else -> throw exception
+                }
             }
         }
     }
