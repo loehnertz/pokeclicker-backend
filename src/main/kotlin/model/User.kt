@@ -54,6 +54,10 @@ fun Users.getUser(username: String): User {
     )
 }
 
+fun Users.getPokemons(userId: Int): List<Pokemon> {
+    return transaction { Pokemons.select { Pokemons.owner eq userId }.map { Pokemons.toPokemon(it) } }
+}
+
 fun Users.subtractPokeDollarsFromBalance(userId: Int, amountToSubtract: Long): Long {
     val user = Users.getUser(userId)
 
