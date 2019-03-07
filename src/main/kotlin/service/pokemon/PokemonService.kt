@@ -1,5 +1,3 @@
 package service.pokemon
 
-class PokemonService {
-
-}
+class PokemonService

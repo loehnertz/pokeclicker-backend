@@ -14,12 +14,12 @@ import io.ktor.routing.Routing
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 import io.ktor.websocket.WebSockets
+import resource.pokemon
 import resource.store
 import resource.user
-import resource.pokemon
+import service.pokemon.PokemonService
 import service.store.StoreService
 import service.user.UserService
-import service.pokemon.PokemonService
 import utility.DatabaseFactory
 import utility.Scheduler
 
