@@ -11,7 +11,7 @@ class PokeApiAdapter {
                 Pokemons.select { Pokemons.id eq dbId }.first()
             }
         )
-        pokemon.apiInfo = PokeApi.client.getPokemon(pokemon.pokeNumber)
+        pokemon.fatApiInfo = PokeApi.client.getPokemon(pokemon.pokeNumber)
 
         return pokemon
     }
