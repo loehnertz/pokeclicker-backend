@@ -16,8 +16,6 @@ import io.ktor.server.netty.Netty
 import io.ktor.websocket.WebSockets
 import resource.store
 import resource.user
-import resource.pokemon
-import service.PokemonService
 import service.store.StoreService
 import service.user.UserService
 import utility.DatabaseFactory
@@ -47,7 +45,6 @@ fun Application.module() {
     install(Routing) {
         user(UserService())
         store(StoreService())
-        pokemon(PokemonService())
     }
 }
 

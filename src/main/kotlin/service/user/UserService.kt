@@ -23,7 +23,7 @@ class UserService {
     fun getUserPokemon(userId: Int): List<model.Pokemon> {
 
         val ownedPokemons = transaction {
-            model.Pokemons.select{ Pokemons.owner eq userId}.map { model.Pokemons.toPokemon(it) }
+            model.Pokemons.select{Pokemons.owner eq userId}.map{model.Pokemons.toPokemon(it)}
         }
 
         return ownedPokemons
