@@ -4,6 +4,7 @@ import org.jetbrains.exposed.sql.ReferenceOption
 import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.Table
 import org.joda.time.DateTime
+import service.store.data.ThinPokemon
 import utility.PokeApi
 
 object Pokemons : Table() {
@@ -20,7 +21,8 @@ data class Pokemon(
     val owner: User? = null,
     val xp: Int,
     val aquisitionDateTime: DateTime,
-    var apiInfo: me.sargunvohra.lib.pokekotlin.model.Pokemon?
+    var fatApiInfo: me.sargunvohra.lib.pokekotlin.model.Pokemon? = null,
+    var thinApiInfo: ThinPokemon? = null
 )
 
 fun Pokemons.toPokemon(row: ResultRow): Pokemon {
@@ -30,6 +32,6 @@ fun Pokemons.toPokemon(row: ResultRow): Pokemon {
         owner = Users.getUser(row[Pokemons.owner]),
         xp = row[Pokemons.xp],
         aquisitionDateTime = row[Pokemons.aquisitionDateTime],
-        apiInfo = PokeApi.getPokemon(row[Pokemons.id])
+        thinApiInfo = PokeApi.getPokemon(row[Pokemons.id])
     )
 }
