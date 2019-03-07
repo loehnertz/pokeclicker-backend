@@ -12,7 +12,7 @@ import utility.PokeApi
 const val BoosterpackSize = 5
 const val BasePriceFactor = 1.0 / 55.0
 const val LocationIdBaseIncrease = 1.25
-const val BoosterpackAmountLimit = 55
+const val BoosterpackAmountLimit = 25
 
 class StoreService {
     fun getAllBoosterpacks(): List<Boosterpack> {
