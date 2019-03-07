@@ -12,10 +12,11 @@ import utility.PokeApi
 const val BoosterpackSize = 5
 const val BasePriceFactor = 1.0 / 55.0
 const val LocationIdBaseIncrease = 1.25
+const val BoosterpackAmountLimit = 55
 
 class StoreService {
     fun getAllBoosterpacks(): List<Boosterpack> {
-        return PokeApi.client.getLocationList(0, 55).results.mapNotNull { getSpecificBoosterpack(it.id) }
+        return PokeApi.client.getLocationList(0, BoosterpackAmountLimit).results.mapNotNull { getSpecificBoosterpack(it.id) }
     }
 
     fun getSpecificBoosterpack(id: Int): Boosterpack? {
