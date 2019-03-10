@@ -14,22 +14,31 @@ import service.store.StoreService
 import service.user.authorization.TokenExpiredException
 import service.user.authorization.TokenManager
 import service.user.authorization.TokenMissingException
+import utility.ErrorLogger
 
 fun Route.store(storeService: StoreService) {
     route("/store") {
         route("/boosterpacks") {
             get("/") {
-                call.respond(storeService.getAllBoosterpacks())
+                try {
+                    call.respond(storeService.getAllBoosterpacks())
+                } catch (exception: Exception) {
+                    ErrorLogger.logException(exception).also { throw exception }
+                }
             }
 
             get("/{id}") {
-                val boosterpackId = call.parameters["id"]!!
-                val boosterpack = storeService.getSpecificBoosterpack(boosterpackId.toInt())
+                try {
+                    val boosterpackId = call.parameters["id"]!!
+                    val boosterpack = storeService.getSpecificBoosterpack(boosterpackId.toInt())
 
-                if (boosterpack != null) {
-                    call.respond(boosterpack)
-                } else {
-                    call.respond(HttpStatusCode.NotFound)
+                    if (boosterpack != null) {
+                        call.respond(boosterpack)
+                    } else {
+                        call.respond(HttpStatusCode.NotFound)
+                    }
+                } catch (exception: Exception) {
+                    ErrorLogger.logException(exception).also { throw exception }
                 }
             }
 
@@ -45,8 +54,7 @@ fun Route.store(storeService: StoreService) {
                 } catch (exception: BadRequestException) {
                     call.respond(HttpStatusCode.BadRequest, Response(error = exception.localizedMessage))
                 } catch (exception: Exception) {
-                    // TODO: Add logging here
-                    throw exception
+                    ErrorLogger.logException(exception).also { throw exception }
                 }
             }
         }

@@ -29,6 +29,7 @@ import service.user.data.UserLoginRequest
 import service.user.data.UserRegistrationRequest
 import service.user.session.SessionLockAlreadyAcquired
 import service.user.session.SessionSemaphore
+import utility.ErrorLogger
 import utility.Scheduler
 import java.util.concurrent.TimeUnit
 
@@ -48,6 +49,8 @@ fun Route.user(userService: UserService) {
                 call.respond(loginResponse)
             } catch (exception: MissingKotlinParameterException) {
                 call.respond("You are missing one or multiple parameters")
+            } catch (exception: Exception) {
+                ErrorLogger.logException(exception).also { throw exception }
             }
         }
 
@@ -58,17 +61,27 @@ fun Route.user(userService: UserService) {
                 call.respond(registrationResponse)
             } catch (exception: MissingKotlinParameterException) {
                 call.respond("You are missing one or multiple parameters")
+            } catch (exception: Exception) {
+                ErrorLogger.logException(exception).also { throw exception }
             }
         }
 
         get("/{id}") {
-            val id = call.parameters["id"]!!
-            call.respond(Users.getUser(id.toInt()))
+            try {
+                val id = call.parameters["id"]!!
+                call.respond(Users.getUser(id.toInt()))
+            } catch (exception: Exception) {
+                ErrorLogger.logException(exception).also { throw exception }
+            }
         }
 
         get("/{id}/pokemon") {
-            val id = call.parameters["id"]!!
-            call.respond(userService.getUserPokemon(id.toInt()))
+            try {
+                val id = call.parameters["id"]!!
+                call.respond(userService.getUserPokemon(id.toInt()))
+            } catch (exception: Exception) {
+                ErrorLogger.logException(exception).also { throw exception }
+            }
         }
 
         webSocket("/balance") {
@@ -99,7 +112,7 @@ fun Route.user(userService: UserService) {
                     is TokenExpiredException -> close(CloseReason(CloseReason.Codes.CANNOT_ACCEPT, message = exception.message))
                     is TokenMissingException -> close(CloseReason(CloseReason.Codes.CANNOT_ACCEPT, message = exception.message))
                     is SessionLockAlreadyAcquired -> close(CloseReason(CloseReason.Codes.VIOLATED_POLICY, message = exception.message))
-                    else -> throw exception
+                    else -> ErrorLogger.logException(exception).also { throw exception }
                 }
             }
         }
@@ -128,7 +141,6 @@ fun Route.user(userService: UserService) {
                         }
                     }
                 } catch (exception: Exception) {
-                    // TODO: Add logging here
                     close(CloseReason(CloseReason.Codes.UNEXPECTED_CONDITION, message = WebSocketClosedByExceptionMessage))
                 } finally {
                     SessionSemaphore.releaseClickingSession(user)
@@ -138,7 +150,7 @@ fun Route.user(userService: UserService) {
                     is TokenExpiredException -> close(CloseReason(CloseReason.Codes.CANNOT_ACCEPT, message = exception.message))
                     is TokenMissingException -> close(CloseReason(CloseReason.Codes.CANNOT_ACCEPT, message = exception.message))
                     is SessionLockAlreadyAcquired -> close(CloseReason(CloseReason.Codes.VIOLATED_POLICY, message = exception.message))
-                    else -> throw exception
+                    else -> ErrorLogger.logException(exception).also { throw exception }
                 }
             }
         }
