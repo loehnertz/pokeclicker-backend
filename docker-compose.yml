@@ -21,6 +21,6 @@ services:
   redis:
     image: redis:alpine
     ports:
-      - 6379
+      - "${redis_port}:${redis_port}"
 volumes:
   data:
