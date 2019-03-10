@@ -3,7 +3,7 @@ services:
   backend:
     build: .
     ports:
-      - 8080:8080
+      - "${backend_port}:${backend_port}"
     env_file:
       - .env
   database:
