@@ -14,31 +14,22 @@ import service.store.StoreService
 import service.user.authorization.TokenExpiredException
 import service.user.authorization.TokenManager
 import service.user.authorization.TokenMissingException
-import utility.ErrorLogger
 
 fun Route.store(storeService: StoreService) {
     route("/store") {
         route("/boosterpacks") {
             get("/") {
-                try {
-                    call.respond(storeService.getAllBoosterpacks())
-                } catch (exception: Exception) {
-                    ErrorLogger.logException(exception).also { throw exception }
-                }
+                call.respond(storeService.getAllBoosterpacks())
             }
 
             get("/{id}") {
-                try {
-                    val boosterpackId = call.parameters["id"]!!
-                    val boosterpack = storeService.getSpecificBoosterpack(boosterpackId.toInt())
+                val boosterpackId = call.parameters["id"]!!
+                val boosterpack = storeService.getSpecificBoosterpack(boosterpackId.toInt())
 
-                    if (boosterpack != null) {
-                        call.respond(boosterpack)
-                    } else {
-                        call.respond(HttpStatusCode.NotFound)
-                    }
-                } catch (exception: Exception) {
-                    ErrorLogger.logException(exception).also { throw exception }
+                if (boosterpack != null) {
+                    call.respond(boosterpack)
+                } else {
+                    call.respond(HttpStatusCode.NotFound)
                 }
             }
 
@@ -53,8 +44,6 @@ fun Route.store(storeService: StoreService) {
                     call.respond(exception.message)
                 } catch (exception: BadRequestException) {
                     call.respond(HttpStatusCode.BadRequest, Response(error = exception.localizedMessage))
-                } catch (exception: Exception) {
-                    ErrorLogger.logException(exception).also { throw exception }
                 }
             }
         }

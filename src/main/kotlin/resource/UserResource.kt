@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.module.kotlin.MissingKotlinParameterException
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.ktor.application.call
+import io.ktor.http.HttpStatusCode
 import io.ktor.http.cio.websocket.CloseReason
 import io.ktor.http.cio.websocket.Frame
 import io.ktor.http.cio.websocket.close
@@ -29,7 +30,6 @@ import service.user.data.UserLoginRequest
 import service.user.data.UserRegistrationRequest
 import service.user.session.SessionLockAlreadyAcquired
 import service.user.session.SessionSemaphore
-import utility.ErrorLogger
 import utility.Scheduler
 import java.util.concurrent.TimeUnit
 
@@ -48,9 +48,7 @@ fun Route.user(userService: UserService) {
                 val loginResponse = userService.loginUser(loginRequest)
                 call.respond(loginResponse)
             } catch (exception: MissingKotlinParameterException) {
-                call.respond("You are missing one or multiple parameters")
-            } catch (exception: Exception) {
-                ErrorLogger.logException(exception).also { throw exception }
+                call.respond(HttpStatusCode.BadRequest, "You are missing one or multiple parameters")
             }
         }
 
@@ -60,28 +58,18 @@ fun Route.user(userService: UserService) {
                 val registrationResponse = userService.registerUser(registrationRequest)
                 call.respond(registrationResponse)
             } catch (exception: MissingKotlinParameterException) {
-                call.respond("You are missing one or multiple parameters")
-            } catch (exception: Exception) {
-                ErrorLogger.logException(exception).also { throw exception }
+                call.respond(HttpStatusCode.BadRequest, "You are missing one or multiple parameters")
             }
         }
 
         get("/{id}") {
-            try {
-                val id = call.parameters["id"]!!
-                call.respond(Users.getUser(id.toInt()))
-            } catch (exception: Exception) {
-                ErrorLogger.logException(exception).also { throw exception }
-            }
+            val id = call.parameters["id"]!!
+            call.respond(Users.getUser(id.toInt()))
         }
 
         get("/{id}/pokemon") {
-            try {
-                val id = call.parameters["id"]!!
-                call.respond(userService.getUserPokemon(id.toInt()))
-            } catch (exception: Exception) {
-                ErrorLogger.logException(exception).also { throw exception }
-            }
+            val id = call.parameters["id"]!!
+            call.respond(userService.getUserPokemon(id.toInt()))
         }
 
         webSocket("/balance") {
@@ -112,7 +100,7 @@ fun Route.user(userService: UserService) {
                     is TokenExpiredException -> close(CloseReason(CloseReason.Codes.CANNOT_ACCEPT, message = exception.message))
                     is TokenMissingException -> close(CloseReason(CloseReason.Codes.CANNOT_ACCEPT, message = exception.message))
                     is SessionLockAlreadyAcquired -> close(CloseReason(CloseReason.Codes.VIOLATED_POLICY, message = exception.message))
-                    else -> ErrorLogger.logException(exception).also { throw exception }
+                    else -> throw exception
                 }
             }
         }
@@ -150,7 +138,7 @@ fun Route.user(userService: UserService) {
                     is TokenExpiredException -> close(CloseReason(CloseReason.Codes.CANNOT_ACCEPT, message = exception.message))
                     is TokenMissingException -> close(CloseReason(CloseReason.Codes.CANNOT_ACCEPT, message = exception.message))
                     is SessionLockAlreadyAcquired -> close(CloseReason(CloseReason.Codes.VIOLATED_POLICY, message = exception.message))
-                    else -> ErrorLogger.logException(exception).also { throw exception }
+                    else -> throw exception
                 }
             }
         }
