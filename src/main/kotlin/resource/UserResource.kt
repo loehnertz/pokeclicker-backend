@@ -11,12 +11,15 @@ import io.ktor.http.cio.websocket.readText
 import io.ktor.request.receive
 import io.ktor.response.respond
 import io.ktor.routing.Route
+import io.ktor.routing.get
 import io.ktor.routing.post
 import io.ktor.routing.route
 import io.ktor.websocket.webSocket
 import kotlinx.coroutines.channels.consumeEach
 import kotlinx.coroutines.channels.mapNotNull
 import kotlinx.coroutines.delay
+import model.Users
+import model.getUser
 import service.user.UserService
 import service.user.authorization.TokenManager
 import service.user.data.UserLoginRequest
@@ -49,6 +52,16 @@ fun Route.user(userService: UserService) {
             } catch (exception: MissingKotlinParameterException) {
                 call.respond("You are missing one or multiple parameters")
             }
+        }
+
+        get("/{id}") {
+            val id = call.parameters["id"]!!
+            call.respond(Users.getUser(id.toInt()))
+        }
+
+        get("/{id}/pokemon") {
+            val id = call.parameters["id"]!!
+            call.respond(userService.getUserPokemon(id.toInt()))
         }
 
         webSocket("/balance") {
