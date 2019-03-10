@@ -34,6 +34,7 @@ fun Application.module() {
         method(HttpMethod.Get)
         method(HttpMethod.Post)
         header(HttpHeaders.AccessControlAllowOrigin)
+        header(HttpHeaders.Authorization)
         anyHost()
     }
 
