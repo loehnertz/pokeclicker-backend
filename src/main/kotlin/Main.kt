@@ -55,5 +55,10 @@ fun Application.module() {
 }
 
 fun main() {
-    embeddedServer(Netty, 8080, watchPaths = listOf("MainKt"), module = Application::module).start()
+    embeddedServer(
+        factory = Netty,
+        port = System.getenv("backend_port").toInt(),
+        watchPaths = listOf("MainKt"),
+        module = Application::module
+    ).start()
 }

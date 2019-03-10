@@ -3,7 +3,7 @@ services:
   backend:
     build: .
     ports:
-      - 8080:8080
+      - "${backend_port}:${backend_port}"
     env_file:
       - .env
   database:
@@ -21,6 +21,6 @@ services:
   redis:
     image: redis:alpine
     ports:
-      - 6379
+      - "${redis_port}:${redis_port}"
 volumes:
   data:
