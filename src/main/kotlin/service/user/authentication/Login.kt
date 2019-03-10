@@ -6,6 +6,7 @@ import org.mindrot.jbcrypt.BCrypt
 import service.user.authorization.TokenManager
 import service.user.data.UserAuthenticationResponse
 import service.user.data.UserLoginRequest
+import service.user.session.SessionSemaphore
 
 object Login {
     fun loginUser(userLoginRequest: UserLoginRequest): UserAuthenticationResponse {
@@ -16,6 +17,7 @@ object Login {
             UserAuthenticationResponse(error = "The password you entered is incorrect")
         } else {
             val userToken = TokenManager.createToken(userLoginRequest.username)
+            SessionSemaphore.releaseAllSessions(Users.getUser(userLoginRequest.username))
             UserAuthenticationResponse(ok = true, token = userToken)
         }
     }

@@ -45,8 +45,6 @@ fun Application.module() {
 
     DatabaseFactory.init()
 
-    Scheduler.scheduleRecurringTasks()
-
     install(Routing) {
         user(UserService())
         store(StoreService())

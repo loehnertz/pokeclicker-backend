@@ -4,43 +4,47 @@ import model.User
 import model.Users
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.update
-import redis.clients.jedis.Jedis
+import utility.RedisFactory
 
 class BalanceManager(val user: User) {
-    fun increaseCurrentBalance(increaseAmount: Long = 1): Long? {
-        return redis.hincrBy(RedisKeyUserBalances, user.name, increaseAmount)
+    fun increaseCurrentBalance(increaseAmount: Long = 1) {
+        val redis = RedisFactory.retrieveRedisClient()
+        redis.hincrBy(RedisKeyUserBalances, user.name, increaseAmount)
+        redis.close()
     }
 
     fun retrieveCurrentBalance(): Long {
+        val redis = RedisFactory.retrieveRedisClient()
+
         val currentBalance = redis.hmget(RedisKeyUserBalances, user.name).firstOrNull()?.toLong()
+
+        redis.close()
 
         return if (currentBalance != null) {
             currentBalance
         } else {
-            setCurrentBalance()
+            setCurrentBalance(user.pokeDollars)
             user.pokeDollars
         }
     }
 
-    private fun setCurrentBalance(): String? {
-        return redis.hmset(RedisKeyUserBalances, mapOf(user.name to user.pokeDollars.toString()))
+    fun syncCurrentBalanceToDatabase() {
+        transaction {
+            Users.update({ Users.name eq user.name }) {
+                it[pokeDollars] = retrieveCurrentBalance()
+            }
+        }
+    }
+
+    private fun setCurrentBalance(value: Long) {
+        val redis = RedisFactory.retrieveRedisClient()
+
+        redis.hmset(RedisKeyUserBalances, mapOf(user.name to value.toString()))
+
+        redis.close()
     }
 
     companion object {
         private const val RedisKeyUserBalances = "balances"
-
-        private val redis = Jedis(System.getenv("redis_host"))
-
-        fun syncAllCurrentBalancesToDatabase() {
-            val allBalances = redis.hgetAll(RedisKeyUserBalances)
-
-            for ((username, currentBalance) in allBalances) {
-                transaction {
-                    Users.update({ Users.name eq username }) {
-                        it[pokeDollars] = currentBalance.toLong()
-                    }
-                }
-            }
-        }
     }
 }
