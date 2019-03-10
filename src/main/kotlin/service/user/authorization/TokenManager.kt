@@ -6,7 +6,7 @@ import model.User
 import model.Users
 import model.getUser
 import org.mindrot.jbcrypt.BCrypt
-import redis.clients.jedis.Jedis
+import utility.RedisFactory
 import java.util.concurrent.TimeUnit
 
 object TokenManager {
@@ -15,8 +15,6 @@ object TokenManager {
     private const val AuthorizationHttpRequestParameterKey = "token"
     private const val RedisBaseKeyTokenByUsername = "token_by_username"
     private const val RedisBaseKeyUsernameByToken = "username_by_token"
-
-    private val redis = Jedis(System.getenv("redis_host"))
 
     internal val UserTokenExpiryInSeconds = TimeUnit.DAYS.toSeconds(7).toInt()
 
@@ -66,6 +64,8 @@ object TokenManager {
     }
 
     private fun insertToken(username: String, token: String, redisUsernameByTokenKey: String, redisTokenByUsernameKey: String) {
+        val redis = RedisFactory.retrieveRedisClient()
+
         redis.del(redisTokenByUsernameKey)
         redis.del(redisUsernameByTokenKey)
 
@@ -74,17 +74,28 @@ object TokenManager {
 
         redis.expire(redisUsernameByTokenKey, UserTokenExpiryInSeconds)
         redis.expire(redisTokenByUsernameKey, UserTokenExpiryInSeconds)
+
+        redis.close()
     }
 
     private fun verifyToken(username: String, providedToken: String): Boolean {
+        val redis = RedisFactory.retrieveRedisClient()
+
         val redisTokenByUsernameKey = generateRedisTokenByUsernameKey(username)
         val actualToken = redis.get(redisTokenByUsernameKey)
+
+        redis.close()
 
         return !(actualToken == null || providedToken != actualToken)
     }
 
     private fun retrieveUsernameByToken(token: String): String? {
+        val redis = RedisFactory.retrieveRedisClient()
+
         val redisUsernameByTokenKey = generateRedisUsernameByTokenKey(token)
+
+        redis.close()
+
         return redis.get(redisUsernameByTokenKey)
     }
 

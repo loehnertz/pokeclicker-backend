@@ -21,15 +21,22 @@ import kotlinx.coroutines.delay
 import model.Users
 import model.getUser
 import service.user.UserService
+import service.user.authorization.TokenExpiredException
 import service.user.authorization.TokenManager
+import service.user.authorization.TokenMissingException
+import service.user.balance.BalanceIncreaseRateManager
 import service.user.data.UserLoginRequest
 import service.user.data.UserRegistrationRequest
+import service.user.session.SessionLockAlreadyAcquired
+import service.user.session.SessionSemaphore
+import utility.Scheduler
 import java.util.concurrent.TimeUnit
 
 const val WebSocketClickingKeyword = "click"
 const val WebSocketClosingKeyword = "bye"
 const val WebSocketClickingMessage = "Click successfully received"
-const val WebSocketClosingMessage = "Connection closed by client"
+const val WebSocketClosedByClientMessage = "Connection closed by client"
+const val WebSocketClosedByExceptionMessage = "An exception occurred, please reopen the socket"
 const val WebSocketUnknownCommandMessage = "The received command is unknown"
 
 fun Route.user(userService: UserService) {
@@ -65,33 +72,73 @@ fun Route.user(userService: UserService) {
         }
 
         webSocket("/balance") {
-            val user = TokenManager.verifyTokenAndRetrieveUser(call.parameters)
-            val balanceManager = userService.buildBalanceManager(user)
+            try {
+                val user = TokenManager.verifyTokenAndRetrieveUser(call.parameters)
+                val balanceManager = userService.buildBalanceManager(user)
+                val balanceIncreaseRateManager = BalanceIncreaseRateManager(user)
 
-            while (true) {
-                val currentBalance = balanceManager.retrieveCurrentBalance()
-                outgoing.send(Frame.Text(currentBalance.toString()))
-                delay(TimeUnit.SECONDS.toMillis(1))
+                SessionSemaphore.acquireBalanceSession(user)
+
+                try {
+                    while (true) {
+                        balanceIncreaseRateManager.increaseBalanceBasedOnIncreaseRate(balanceManager)
+
+                        val currentBalance = balanceManager.retrieveCurrentBalance()
+                        outgoing.send(Frame.Text(currentBalance.toString()))
+
+                        delay(TimeUnit.SECONDS.toMillis(Scheduler.BalanceIncreaseTimeoutInSeconds))
+                    }
+                } catch (exception: Exception) {
+                    close(CloseReason(CloseReason.Codes.UNEXPECTED_CONDITION, message = WebSocketClosedByExceptionMessage))
+                } finally {
+                    balanceManager.syncCurrentBalanceToDatabase()
+                    SessionSemaphore.releaseBalanceSession(user)
+                }
+            } catch (exception: Exception) {
+                when (exception) {
+                    is TokenExpiredException -> close(CloseReason(CloseReason.Codes.CANNOT_ACCEPT, message = exception.message))
+                    is TokenMissingException -> close(CloseReason(CloseReason.Codes.CANNOT_ACCEPT, message = exception.message))
+                    is SessionLockAlreadyAcquired -> close(CloseReason(CloseReason.Codes.VIOLATED_POLICY, message = exception.message))
+                    else -> throw exception
+                }
             }
         }
 
         webSocket("/clicking") {
-            val user = TokenManager.verifyTokenAndRetrieveUser(call.parameters)
-            val balanceManager = userService.buildBalanceManager(user)
+            try {
+                val user = TokenManager.verifyTokenAndRetrieveUser(call.parameters)
+                val balanceManager = userService.buildBalanceManager(user)
 
-            incoming.mapNotNull { it as? Frame.Text }.consumeEach { frame ->
-                val text = frame.readText()
+                SessionSemaphore.acquireClickingSession(user)
 
-                when {
-                    text.equals(WebSocketClickingKeyword, ignoreCase = true) -> {
-                        balanceManager.increaseCurrentBalance(increaseAmount = 1)
-                        outgoing.send(Frame.Text(WebSocketClickingMessage))
+                try {
+                    incoming.mapNotNull { it as? Frame.Text }.consumeEach { frame ->
+                        val text = frame.readText()
+
+                        when {
+                            text.equals(WebSocketClickingKeyword, ignoreCase = true) -> {
+                                balanceManager.increaseCurrentBalance()
+                                outgoing.send(Frame.Text(WebSocketClickingMessage))
+                            }
+                            text.equals(WebSocketClosingKeyword, ignoreCase = true) -> {
+                                outgoing.send(Frame.Text(WebSocketClosedByClientMessage))
+                                close(CloseReason(CloseReason.Codes.NORMAL, message = WebSocketClosedByClientMessage))
+                            }
+                            else -> outgoing.send(Frame.Text(WebSocketUnknownCommandMessage))
+                        }
                     }
-                    text.equals(WebSocketClosingKeyword, ignoreCase = true) -> {
-                        outgoing.send(Frame.Text(WebSocketClosingMessage))
-                        close(CloseReason(CloseReason.Codes.NORMAL, message = WebSocketClosingMessage))
-                    }
-                    else -> outgoing.send(Frame.Text(WebSocketUnknownCommandMessage))
+                } catch (exception: Exception) {
+                    // TODO: Add logging here
+                    close(CloseReason(CloseReason.Codes.UNEXPECTED_CONDITION, message = WebSocketClosedByExceptionMessage))
+                } finally {
+                    SessionSemaphore.releaseClickingSession(user)
+                }
+            } catch (exception: Exception) {
+                when (exception) {
+                    is TokenExpiredException -> close(CloseReason(CloseReason.Codes.CANNOT_ACCEPT, message = exception.message))
+                    is TokenMissingException -> close(CloseReason(CloseReason.Codes.CANNOT_ACCEPT, message = exception.message))
+                    is SessionLockAlreadyAcquired -> close(CloseReason(CloseReason.Codes.VIOLATED_POLICY, message = exception.message))
+                    else -> throw exception
                 }
             }
         }
