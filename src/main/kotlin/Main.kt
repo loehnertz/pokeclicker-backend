@@ -21,7 +21,7 @@ import service.pokemon.PokemonService
 import service.store.StoreService
 import service.user.UserService
 import utility.DatabaseFactory
-import utility.Scheduler
+import utility.ErrorLogger
 
 fun Application.module() {
     install(DefaultHeaders)
@@ -42,6 +42,8 @@ fun Application.module() {
             configure(SerializationFeature.INDENT_OUTPUT, true)
         }
     }
+
+    ErrorLogger.setupSentry()
 
     DatabaseFactory.init()
 
