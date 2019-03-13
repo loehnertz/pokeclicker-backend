@@ -7,6 +7,7 @@ import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.joda.time.DateTime
 import service.store.data.ThinPokemon
+import service.user.balance.BalanceIncreaseRateManager
 import utility.PokeApi
 
 const val BoosterpackSize = 5
@@ -39,7 +40,7 @@ class StoreService {
     fun buyBoosterpack(boosterpackId: Int, user: User): List<model.Pokemon> {
         // Retrieve the information necessary to open a new boosterpack
         val boosterpack = getSpecificBoosterpack(boosterpackId)
-            ?: throw NotFoundException("A boosterpack with this ID does not exist")
+            ?: throw NotFoundException("This boosterpack does not exist")
 
         // Check if user has enough money
         if (user.pokeDollars < boosterpack.price) throw BadRequestException("User does not own enough PokéDollars")
@@ -52,6 +53,9 @@ class StoreService {
 
         // Subtract the booster pack price from the user's account balance
         Users.subtractPokeDollarsFromBalance(user.id, boosterpack.price)
+
+        // Update the gather rate of the user
+        BalanceIncreaseRateManager(user).updateIncreaseRate()
 
         return insertedPokemons
     }
