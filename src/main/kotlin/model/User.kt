@@ -8,6 +8,7 @@ import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.update
+import service.user.balance.BalanceManager
 
 object Users : Table() {
     val id = integer("id").primaryKey().autoIncrement()
@@ -65,5 +66,9 @@ fun Users.subtractPokeDollarsFromBalance(userId: Int, amountToSubtract: Long): L
         Users.update({ Users.id eq user.id }) { it[pokeDollars] = (user.pokeDollars - amountToSubtract) }
     }
 
-    return (user.pokeDollars - amountToSubtract)
+    val newBalance = (user.pokeDollars - amountToSubtract)
+
+    BalanceManager(user).setCurrentBalance(newBalance)
+
+    return newBalance
 }
