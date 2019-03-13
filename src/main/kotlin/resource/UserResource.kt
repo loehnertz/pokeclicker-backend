@@ -62,14 +62,32 @@ fun Route.user(userService: UserService) {
             }
         }
 
-        get("/{id}") {
-            val id = call.parameters["id"]!!
-            call.respond(Users.getUser(id.toInt()))
+        get("/") {
+            try {
+                val user = TokenManager.verifyTokenAndRetrieveUser(call.request.headers)
+
+                call.respond(Users.getUser(user.id))
+            } catch (exception: Exception) {
+                when (exception) {
+                    is TokenExpiredException -> call.respond(HttpStatusCode.Unauthorized, exception.message)
+                    is TokenMissingException -> call.respond(HttpStatusCode.Unauthorized, exception.message)
+                    else -> throw exception
+                }
+            }
         }
 
-        get("/{id}/pokemon") {
-            val id = call.parameters["id"]!!
-            call.respond(userService.getUserPokemon(id.toInt()))
+        get("/pokemon") {
+            try {
+                val user = TokenManager.verifyTokenAndRetrieveUser(call.request.headers)
+
+                call.respond(userService.getUserPokemon(user.id))
+            } catch (exception: Exception) {
+                when (exception) {
+                    is TokenExpiredException -> call.respond(HttpStatusCode.Unauthorized, exception.message)
+                    is TokenMissingException -> call.respond(HttpStatusCode.Unauthorized, exception.message)
+                    else -> throw exception
+                }
+            }
         }
 
         webSocket("/balance") {
