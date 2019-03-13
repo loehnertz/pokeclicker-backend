@@ -11,7 +11,7 @@ import java.util.concurrent.TimeUnit
 
 object TokenManager {
     private const val AuthorizationHttpRequestHeaderKey = "Authorization"
-    private const val AuthorizationHttpRequestHeaderTokenKey = "Token: "
+    private const val AuthorizationHttpRequestHeaderTokenKey = "Token "
     private const val AuthorizationHttpRequestParameterKey = "token"
     private const val RedisBaseKeyTokenByUsername = "token_by_username"
     private const val RedisBaseKeyUsernameByToken = "username_by_token"
