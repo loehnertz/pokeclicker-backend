@@ -37,6 +37,7 @@ fun Route.store(storeService: StoreService) {
                 try {
                     val boosterpackId = call.parameters["id"]!!
                     val user = TokenManager.verifyTokenAndRetrieveUser(call.request.headers)
+
                     call.respond(storeService.buyBoosterpack(boosterpackId.toInt(), user))
                 } catch (exception: TokenExpiredException) {
                     call.respond(exception.message)
