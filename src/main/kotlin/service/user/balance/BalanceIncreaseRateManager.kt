@@ -29,7 +29,7 @@ class BalanceIncreaseRateManager(val user: User) {
         }
     }
 
-    private fun retrieveIncreaseRate(): Long? {
+    fun retrieveIncreaseRate(): Long? {
         val redis = RedisFactory.retrieveRedisClient()
 
         return try {
