@@ -32,6 +32,6 @@ fun Pokemons.toPokemon(row: ResultRow): Pokemon {
         owner = Users.getUser(row[Pokemons.owner]),
         xp = row[Pokemons.xp],
         aquisitionDateTime = row[Pokemons.aquisitionDateTime],
-        thinApiInfo = PokeApi.getPokemon(row[Pokemons.id])
+        thinApiInfo = PokeApi.getPokemon(row[Pokemons.pokeNumber])
     )
 }
