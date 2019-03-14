@@ -103,7 +103,9 @@ fun Route.user(userService: UserService) {
                         balanceIncreaseRateManager.increaseBalanceBasedOnIncreaseRate(balanceManager)
 
                         val currentBalance = balanceManager.retrieveCurrentBalance()
-                        outgoing.send(Frame.Text(currentBalance.toString()))
+                        val currentIncreaseRate = balanceIncreaseRateManager.retrieveIncreaseRate()
+
+                        outgoing.send(Frame.Text("$currentBalance,$currentIncreaseRate"))
 
                         delay(TimeUnit.SECONDS.toMillis(Scheduler.BalanceIncreaseTimeoutInSeconds))
                     }
