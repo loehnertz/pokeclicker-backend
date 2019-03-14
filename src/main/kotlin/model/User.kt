@@ -66,9 +66,7 @@ fun Users.subtractPokeDollarsFromBalance(userId: Int, amountToSubtract: Long): L
         Users.update({ Users.id eq user.id }) { it[pokeDollars] = (user.pokeDollars - amountToSubtract) }
     }
 
-    val newBalance = (user.pokeDollars - amountToSubtract)
+    BalanceManager(user).decreaseCurrentBalance(amountToSubtract)
 
-    BalanceManager(user).setCurrentBalance(newBalance)
-
-    return newBalance
+    return (user.pokeDollars - amountToSubtract)
 }

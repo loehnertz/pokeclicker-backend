@@ -13,6 +13,12 @@ class BalanceManager(val user: User) {
         redis.close()
     }
 
+    fun decreaseCurrentBalance(decreaseAmount: Long = 1) {
+        val redis = RedisFactory.retrieveRedisClient()
+        redis.hincrBy(RedisKeyUserBalances, user.name, (decreaseAmount * -1))
+        redis.close()
+    }
+
     fun retrieveCurrentBalance(): Long {
         val redis = RedisFactory.retrieveRedisClient()
 
@@ -36,7 +42,7 @@ class BalanceManager(val user: User) {
         }
     }
 
-    fun setCurrentBalance(value: Long) {
+    private fun setCurrentBalance(value: Long) {
         val redis = RedisFactory.retrieveRedisClient()
 
         redis.hmset(RedisKeyUserBalances, mapOf(user.name to value.toString()))
