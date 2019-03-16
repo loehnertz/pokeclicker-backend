@@ -10,27 +10,27 @@ object SessionSemaphore {
     private const val RedisResponseKeyDidAlreadyExist: Long = 0
 
     fun acquireBalanceSession(user: User) {
-        RedisFactory.retrieveRedisClient().use { redis ->
+        RedisFactory.retrieveRedisWritingClient().use { redis ->
             val successfullyAcquired = redis.setnx(generateRedisKey(RedisLockBaseKeyBalance, user), RedisLockValue)
             if (successfullyAcquired == RedisResponseKeyDidAlreadyExist) throw SessionLockAlreadyAcquired()
         }
     }
 
     fun acquireClickingSession(user: User) {
-        RedisFactory.retrieveRedisClient().use { redis ->
+        RedisFactory.retrieveRedisWritingClient().use { redis ->
             val successfullyAcquired = redis.setnx(generateRedisKey(RedisLockBaseKeyClicking, user), RedisLockValue)
             if (successfullyAcquired == RedisResponseKeyDidAlreadyExist) throw SessionLockAlreadyAcquired()
         }
     }
 
     fun releaseBalanceSession(user: User) {
-        RedisFactory.retrieveRedisClient().use { redis ->
+        RedisFactory.retrieveRedisWritingClient().use { redis ->
             redis.del(generateRedisKey(RedisLockBaseKeyBalance, user))
         }
     }
 
     fun releaseClickingSession(user: User) {
-        RedisFactory.retrieveRedisClient().use { redis ->
+        RedisFactory.retrieveRedisWritingClient().use { redis ->
             redis.del(generateRedisKey(RedisLockBaseKeyClicking, user))
         }
     }

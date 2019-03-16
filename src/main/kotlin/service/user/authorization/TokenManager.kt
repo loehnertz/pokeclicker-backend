@@ -64,7 +64,7 @@ object TokenManager {
     }
 
     private fun insertToken(username: String, token: String, redisUsernameByTokenKey: String, redisTokenByUsernameKey: String) {
-        val redis = RedisFactory.retrieveRedisClient()
+        val redis = RedisFactory.retrieveRedisWritingClient()
 
         redis.del(redisTokenByUsernameKey)
         redis.del(redisUsernameByTokenKey)
@@ -79,7 +79,7 @@ object TokenManager {
     }
 
     private fun verifyToken(username: String, providedToken: String): Boolean {
-        val redis = RedisFactory.retrieveRedisClient()
+        val redis = RedisFactory.retrieveRedisWritingClient()
 
         val redisTokenByUsernameKey = generateRedisTokenByUsernameKey(username)
         val actualToken = redis.get(redisTokenByUsernameKey)
@@ -90,7 +90,7 @@ object TokenManager {
     }
 
     private fun retrieveUsernameByToken(token: String): String? {
-        val redis = RedisFactory.retrieveRedisClient()
+        val redis = RedisFactory.retrieveRedisWritingClient()
 
         val redisUsernameByTokenKey = generateRedisUsernameByTokenKey(token)
 

@@ -4,21 +4,15 @@ import com.google.gson.Gson
 import me.sargunvohra.lib.pokekotlin.client.PokeApiClient
 import me.sargunvohra.lib.pokekotlin.model.Location
 import me.sargunvohra.lib.pokekotlin.model.LocationArea
-import redis.clients.jedis.Jedis
 import service.store.data.ThinPokemon
 
-object PokeApi {
-    private const val RedisHashMapKeyPokemons = "pokemons"
-    private const val RedisHashMapKeyLocations = "locations"
-    private const val RedisHashMapKeyLocationAreas = "locationAreas"
-
-    private val gson = Gson()
-    private val redis = Jedis(System.getenv("redis_host"))
-
+class PokeApi {
     val client = PokeApiClient()
 
+    private val gson = Gson()
+
     fun getPokemon(id: Int): ThinPokemon {
-        val cachedValue = redis.hmget(RedisHashMapKeyPokemons, id.toString()).firstOrNull()
+        val cachedValue = RedisConnector().hmget(RedisHashMapKeyPokemons, id.toString()).firstOrNull()
         if (cachedValue != null) return gson.fromJson(cachedValue, ThinPokemon::class.java)
 
         val pokemon = client.getPokemon(id)
@@ -29,18 +23,18 @@ object PokeApi {
             sprite = pokemon.sprites.frontDefault ?: pokemon.sprites.frontShiny
         )
 
-        redis.hmset(RedisHashMapKeyPokemons, mapOf(id.toString() to gson.toJson(thinPokemon)))
+        RedisConnector().hmset(RedisHashMapKeyPokemons, mapOf(id.toString() to gson.toJson(thinPokemon)))
 
         return thinPokemon
     }
 
     fun getLocation(id: Int): Location {
-        val cachedValue = redis.hmget(RedisHashMapKeyLocations, id.toString()).firstOrNull()
+        val cachedValue = RedisConnector().hmget(RedisHashMapKeyLocations, id.toString()).firstOrNull()
         if (cachedValue != null) return gson.fromJson(cachedValue, Location::class.java)
 
         val location = client.getLocation(id)
 
-        redis.hmset(RedisHashMapKeyLocations, mapOf(id.toString() to gson.toJson(location)))
+        RedisConnector().hmset(RedisHashMapKeyLocations, mapOf(id.toString() to gson.toJson(location)))
 
         return location
     }
@@ -51,13 +45,19 @@ object PokeApi {
     }
 
     private fun getLocationArea(id: Int): LocationArea {
-        val cachedValue = redis.hmget(RedisHashMapKeyLocationAreas, id.toString()).firstOrNull()
+        val cachedValue = RedisConnector().hmget(RedisHashMapKeyLocationAreas, id.toString()).firstOrNull()
         if (cachedValue != null) return gson.fromJson(cachedValue, LocationArea::class.java)
 
         val locationArea = client.getLocationArea(id)
 
-        redis.hmset(RedisHashMapKeyLocationAreas, mapOf(id.toString() to gson.toJson(locationArea)))
+        RedisConnector().hmset(RedisHashMapKeyLocationAreas, mapOf(id.toString() to gson.toJson(locationArea)))
 
         return locationArea
+    }
+
+    companion object {
+        private const val RedisHashMapKeyPokemons = "pokemons"
+        private const val RedisHashMapKeyLocations = "locations"
+        private const val RedisHashMapKeyLocationAreas = "locationAreas"
     }
 }

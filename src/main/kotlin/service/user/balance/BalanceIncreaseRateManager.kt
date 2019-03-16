@@ -3,7 +3,7 @@ package service.user.balance
 import model.User
 import model.Users
 import model.getPokemons
-import utility.RedisFactory
+import utility.RedisConnector
 
 class BalanceIncreaseRateManager(val user: User) {
     fun increaseBalanceBasedOnIncreaseRate(balanceManager: BalanceManager) {
@@ -17,28 +17,16 @@ class BalanceIncreaseRateManager(val user: User) {
     }
 
     fun updateIncreaseRate() {
-        val redis = RedisFactory.retrieveRedisClient()
-
-        try {
-            val increaseRatePerMinute = calculateIncreaseRatePerSecond()
-            redis.hmset(RedisHashMapKeyIncreaseRates, mapOf(user.name to increaseRatePerMinute.toString()))
-        } catch (exception: Exception) {
-            // TODO: Add logging here
-        } finally {
-            redis.close()
-        }
+        val increaseRatePerMinute = calculateIncreaseRatePerSecond()
+        RedisConnector().hmset(RedisHashMapKeyIncreaseRates, mapOf(user.name to increaseRatePerMinute.toString()))
     }
 
     fun retrieveIncreaseRate(): Long? {
-        val redis = RedisFactory.retrieveRedisClient()
-
         return try {
-            redis.hmget(RedisHashMapKeyIncreaseRates, user.name).firstOrNull()?.toLong()
+            RedisConnector().hmget(RedisHashMapKeyIncreaseRates, user.name).firstOrNull()?.toLong()
         } catch (exception: Exception) {
             // TODO: Add logging here
             null
-        } finally {
-            redis.close()
         }
     }
 
