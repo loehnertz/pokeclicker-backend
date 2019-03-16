@@ -44,10 +44,11 @@ class BalanceIncreaseRateManager(val user: User) {
 
     private fun calculateIncreaseRatePerSecond(): Long {
         val pokemons = Users.getPokemons(user.id)
-        return pokemons.fold(0) { sum, pokemon -> sum + pokemon.thinApiInfo!!.xp }.toLong()
+        return Math.ceil(pokemons.fold(0) { sum, pokemon -> sum + pokemon.xp }.toDouble() / IncreaseRateScalingFactor).toLong()
     }
 
     companion object {
+        const val IncreaseRateScalingFactor = 3
         private const val RedisHashMapKeyIncreaseRates = "gatherRates"
     }
 }
