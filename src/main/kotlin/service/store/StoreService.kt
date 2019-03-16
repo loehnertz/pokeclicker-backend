@@ -8,12 +8,14 @@ import org.jetbrains.exposed.sql.transactions.transaction
 import org.joda.time.DateTime
 import service.store.data.ThinPokemon
 import service.user.balance.BalanceIncreaseRateManager
+import service.user.balance.BalanceIncreaseRateManager.Companion.IncreaseRateScalingFactor
 import service.user.balance.BalanceManager
 import utility.PokeApi
+import kotlin.random.Random
 
 const val BoosterpackSize = 5
-const val BasePriceFactor = 1.0 / 55.0
-const val LocationIdBaseIncrease = 1.25
+const val LocationIdBaseIncrease = 3.0
+const val SecondsInFiveMinutes = 300
 const val BoosterpackAmountLimit = 25
 
 class StoreService {
@@ -26,12 +28,11 @@ class StoreService {
         val pokemonsInLocation = PokeApi().getPokemonsOfLocation(location)
         if (pokemonsInLocation.isEmpty()) return null
 
-        val price = determineBoosterpackPrice(pokemonsInLocation, location.id)
-        pokemonsInLocation.forEach { it.xp = ((it.xp * price).toInt()) }
+        val price = determineBoosterpackPrice(location.id)
 
         return Boosterpack(
             name = capitalizeLocationName(location.name),
-            price = determineBoosterpackPrice(pokemonsInLocation, location.id),
+            price = price,
             locationId = location.id,
             hexColor = determineHexColorBasedOnLocationId(location.id),
             pokemons = pokemonsInLocation
@@ -49,7 +50,7 @@ class StoreService {
         if (balance < boosterpack.price) throw BadRequestException("User does not own enough PokéDollars")
 
         // Open the booster pack
-        val receivedPokemons = openBoosterpack(boosterpack.pokemons)
+        val receivedPokemons = openBoosterpack(boosterpack.pokemons, boosterpack.price)
 
         // Insert the received Pokemon into the database
         val insertedPokemons = insertReceivedPokemon(receivedPokemons, user)
@@ -63,13 +64,16 @@ class StoreService {
         return insertedPokemons
     }
 
-    private fun openBoosterpack(pokemons: List<ThinPokemon>): List<ThinPokemon> {
+    private fun openBoosterpack(pokemons: List<ThinPokemon>, boosterpackPrice: Long): List<ThinPokemon> {
         val sortedPokemons = pokemons.sortedBy { it.xp }.asReversed()
 
         val possiblePokemons = arrayListOf<ThinPokemon>()
         sortedPokemons.forEachIndexed { index, pokemon -> repeat(index + 1) { possiblePokemons.add(pokemon) } }
 
-        return possiblePokemons.shuffled().take(BoosterpackSize)
+        val drawnPokemons = possiblePokemons.shuffled().take(BoosterpackSize)
+        drawnPokemons.forEach { it.xp = Math.ceil((getReasonablyNormallyDistributedDouble() + 1) * boosterpackPrice / (SecondsInFiveMinutes * BoosterpackSize)).toInt() }
+
+        return drawnPokemons
     }
 
     private fun insertReceivedPokemon(drawnPokemons: List<ThinPokemon>, user: User): List<model.Pokemon> {
@@ -103,9 +107,8 @@ class StoreService {
         return locationName.split("-").joinToString(" ") { it.capitalize() }
     }
 
-    private fun determineBoosterpackPrice(pokemonsInLocation: List<ThinPokemon>, locationId: Int): Long {
-        val basePrice = (pokemonsInLocation.fold(0) { sum, pokemon -> sum + pokemon.xp } / pokemonsInLocation.size) * BoosterpackSize
-        return (basePrice * BasePriceFactor * Math.pow(LocationIdBaseIncrease, locationId.toDouble())).toLong()
+    private fun determineBoosterpackPrice(locationId: Int): Long {
+        return (BoosterpackSize * SecondsInFiveMinutes * Math.pow(LocationIdBaseIncrease, (locationId - 1).toDouble()) / IncreaseRateScalingFactor).toLong()
     }
 
     private fun determineHexColorBasedOnLocationId(locationId: Int): String {
@@ -118,5 +121,9 @@ class StoreService {
         val col = (s0 + s1) and 0xffffff
 
         return col.toString(16).padStart(6, '0')
+    }
+
+    private fun getReasonablyNormallyDistributedDouble(): Double {
+        return ((Random.nextDouble() + Random.nextDouble() + Random.nextDouble()) / 3)
     }
 }
