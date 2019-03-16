@@ -4,27 +4,19 @@ import model.User
 import model.Users
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.update
-import utility.RedisFactory
+import utility.RedisConnector
 
 class BalanceManager(val user: User) {
     fun increaseCurrentBalance(increaseAmount: Long = 1) {
-        val redis = RedisFactory.retrieveRedisClient()
-        redis.hincrBy(RedisKeyUserBalances, user.name, increaseAmount)
-        redis.close()
+        RedisConnector().hincrBy(RedisKeyUserBalances, user.name, increaseAmount)
     }
 
     fun decreaseCurrentBalance(decreaseAmount: Long = 1) {
-        val redis = RedisFactory.retrieveRedisClient()
-        redis.hincrBy(RedisKeyUserBalances, user.name, (decreaseAmount * -1))
-        redis.close()
+        RedisConnector().hincrBy(RedisKeyUserBalances, user.name, (decreaseAmount * -1))
     }
 
     fun retrieveCurrentBalance(): Long {
-        val redis = RedisFactory.retrieveRedisClient()
-
-        val currentBalance = redis.hmget(RedisKeyUserBalances, user.name).firstOrNull()?.toLong()
-
-        redis.close()
+        val currentBalance = RedisConnector().hmget(RedisKeyUserBalances, user.name).firstOrNull()?.toLong()
 
         return if (currentBalance != null) {
             currentBalance
@@ -43,11 +35,7 @@ class BalanceManager(val user: User) {
     }
 
     private fun setCurrentBalance(value: Long) {
-        val redis = RedisFactory.retrieveRedisClient()
-
-        redis.hmset(RedisKeyUserBalances, mapOf(user.name to value.toString()))
-
-        redis.close()
+        RedisConnector().hmset(RedisKeyUserBalances, mapOf(user.name to value.toString()))
     }
 
     companion object {
