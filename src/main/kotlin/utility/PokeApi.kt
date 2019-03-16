@@ -7,15 +7,11 @@ import me.sargunvohra.lib.pokekotlin.model.LocationArea
 import redis.clients.jedis.Jedis
 import service.store.data.ThinPokemon
 
-object PokeApi {
-    private const val RedisHashMapKeyPokemons = "pokemons"
-    private const val RedisHashMapKeyLocations = "locations"
-    private const val RedisHashMapKeyLocationAreas = "locationAreas"
+class PokeApi {
+    val client = PokeApiClient()
 
     private val gson = Gson()
     private val redis = Jedis(System.getenv("redis_host"))
-
-    val client = PokeApiClient()
 
     fun getPokemon(id: Int): ThinPokemon {
         val cachedValue = redis.hmget(RedisHashMapKeyPokemons, id.toString()).firstOrNull()
@@ -59,5 +55,11 @@ object PokeApi {
         redis.hmset(RedisHashMapKeyLocationAreas, mapOf(id.toString() to gson.toJson(locationArea)))
 
         return locationArea
+    }
+
+    companion object {
+        private const val RedisHashMapKeyPokemons = "pokemons"
+        private const val RedisHashMapKeyLocations = "locations"
+        private const val RedisHashMapKeyLocationAreas = "locationAreas"
     }
 }

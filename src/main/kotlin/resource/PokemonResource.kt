@@ -15,12 +15,12 @@ fun Route.pokemon(pokemonService: PokemonService) {
     route("/pokemon") {
         get("/{id}") {
             val id = call.parameters["id"]!!
-            call.respond(PokeApiAdapter.getPokemonData(id.toInt()))
+            call.respond(PokeApiAdapter().getPokemonData(id.toInt()))
         }
 
         get("/pokedex/{id}") {
             val id = call.parameters["id"]!!
-            call.respond(PokeApi.getPokemon(id.toInt()))
+            call.respond(PokeApi().getPokemon(id.toInt()))
         }
     }
 

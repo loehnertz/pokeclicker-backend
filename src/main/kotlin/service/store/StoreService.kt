@@ -18,12 +18,12 @@ const val BoosterpackAmountLimit = 25
 
 class StoreService {
     fun getAllBoosterpacks(): List<Boosterpack> {
-        return PokeApi.client.getLocationList(0, BoosterpackAmountLimit).results.mapNotNull { getSpecificBoosterpack(it.id) }
+        return PokeApi().client.getLocationList(0, BoosterpackAmountLimit).results.mapNotNull { getSpecificBoosterpack(it.id) }
     }
 
     fun getSpecificBoosterpack(id: Int): Boosterpack? {
-        val location = PokeApi.getLocation(id)
-        val pokemonsInLocation = PokeApi.getPokemonsOfLocation(location)
+        val location = PokeApi().getLocation(id)
+        val pokemonsInLocation = PokeApi().getPokemonsOfLocation(location)
         if (pokemonsInLocation.isEmpty()) return null
 
         val price = determineBoosterpackPrice(pokemonsInLocation, location.id)
