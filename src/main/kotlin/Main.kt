@@ -14,6 +14,7 @@ import io.ktor.routing.Routing
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 import io.ktor.websocket.WebSockets
+import resource.info
 import resource.pokemon
 import resource.store
 import resource.user
@@ -49,6 +50,7 @@ fun Application.module() {
     DatabaseFactory.init()
 
     install(Routing) {
+        info()
         user(UserService())
         store(StoreService())
         pokemon(PokemonService())
