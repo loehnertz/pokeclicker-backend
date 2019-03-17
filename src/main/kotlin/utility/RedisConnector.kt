@@ -18,4 +18,16 @@ class RedisConnector {
             return redis.hincrBy(key, field, value)
         }
     }
+
+    fun smembers(key: String): Set<String> {
+        RedisFactory.retrieveRedisReadingClient().use { redis ->
+            return redis.smembers(key)
+        }
+    }
+
+    fun sadd(key: String, vararg members: String): Long {
+        RedisFactory.retrieveRedisReadingClient().use { redis ->
+            return redis.sadd(key, *members)
+        }
+    }
 }

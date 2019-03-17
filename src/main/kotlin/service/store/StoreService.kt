@@ -25,7 +25,7 @@ class StoreService {
     private val gson = Gson()
 
     fun getAllBoosterpacks(): List<Boosterpack> {
-        return PokeApi().client.getLocationList(0, BoosterpackAmountLimit).results.mapNotNull { getSpecificBoosterpack(it.id) }
+        return (1..BoosterpackAmountLimit).mapNotNull { getSpecificBoosterpack(it) }
     }
 
     fun getSpecificBoosterpack(id: Int): Boosterpack? {

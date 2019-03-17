@@ -1,18 +1,21 @@
 package utility
 
 import io.ktor.features.NotFoundException
+import me.sargunvohra.lib.pokekotlin.client.PokeApiClient
 import model.*
 import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.transaction
 
 class PokeApiAdapter {
+    private val client = PokeApiClient()
+
     fun getPokemonData(dbId: Int): Pokemon {
         val pokemon = Pokemons.toPokemon(
             transaction {
                 Pokemons.select { Pokemons.id eq dbId }.firstOrNull()
             } ?: throw NotFoundException("No Pokemon with ID '$dbId' exists")
         )
-        pokemon.fatApiInfo = PokeApi().client.getPokemon(pokemon.pokeNumber)
+        pokemon.fatApiInfo = client.getPokemon(pokemon.pokeNumber)
 
         return pokemon
     }
@@ -23,7 +26,7 @@ class PokeApiAdapter {
                 Items.select { Items.id eq dbId }.first()
             }
         )
-        item.apiInfo = PokeApi().client.getItem(item.itemNumber)
+        item.apiInfo = client.getItem(item.itemNumber)
 
         return item
     }

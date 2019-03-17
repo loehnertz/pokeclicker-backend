@@ -7,7 +7,7 @@ import me.sargunvohra.lib.pokekotlin.model.LocationArea
 import service.store.data.ThinPokemon
 
 class PokeApi {
-    val client = PokeApiClient()
+    private val client = PokeApiClient()
 
     private val gson = Gson()
 
