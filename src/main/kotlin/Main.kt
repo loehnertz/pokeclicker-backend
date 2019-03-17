@@ -1,6 +1,7 @@
 package main
 
 import com.fasterxml.jackson.databind.SerializationFeature
+import com.fasterxml.jackson.datatype.joda.JodaModule
 import io.ktor.application.Application
 import io.ktor.application.install
 import io.ktor.features.CORS
@@ -42,6 +43,8 @@ fun Application.module() {
     install(ContentNegotiation) {
         jackson {
             configure(SerializationFeature.INDENT_OUTPUT, true)
+            configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, true)
+            registerModule(JodaModule())
         }
     }
 
