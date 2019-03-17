@@ -7,7 +7,6 @@ import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.transaction
 
 class PokeApiAdapter {
-    private val client = PokeApiClient()
 
     fun getPokemonData(dbId: Int): Pokemon {
         val pokemon = Pokemons.toPokemon(
@@ -29,5 +28,8 @@ class PokeApiAdapter {
         item.apiInfo = client.getItem(item.itemNumber)
 
         return item
+    }
+    companion object {
+        private val client = PokeApiClient()
     }
 }
