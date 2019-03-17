@@ -7,8 +7,6 @@ import me.sargunvohra.lib.pokekotlin.model.LocationArea
 import service.store.data.ThinPokemon
 
 class PokeApi {
-    private val client = PokeApiClient()
-
     private val gson = Gson()
 
     fun getPokemon(id: Int): ThinPokemon {
@@ -60,6 +58,7 @@ class PokeApi {
     }
 
     companion object {
+        private val client = PokeApiClient()
         private const val RedisHashMapKeyPokemons = "pokemons"
         private const val RedisHashMapKeyLocations = "locations"
         private const val RedisHashMapKeyLocationAreas = "locationAreas"
