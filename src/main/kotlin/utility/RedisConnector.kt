@@ -26,7 +26,7 @@ class RedisConnector {
     }
 
     fun sadd(key: String, vararg members: String): Long {
-        RedisFactory.retrieveRedisReadingClient().use { redis ->
+        RedisFactory.retrieveRedisWritingClient().use { redis ->
             return redis.sadd(key, *members)
         }
     }
