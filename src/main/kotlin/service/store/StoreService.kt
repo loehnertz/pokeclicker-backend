@@ -1,5 +1,6 @@
 package service.store
 
+import com.google.gson.Gson
 import io.ktor.features.BadRequestException
 import io.ktor.features.NotFoundException
 import model.*
@@ -11,32 +12,43 @@ import service.user.balance.BalanceIncreaseRateManager
 import service.user.balance.BalanceIncreaseRateManager.Companion.IncreaseRateScalingFactor
 import service.user.balance.BalanceManager
 import utility.PokeApi
+import utility.RedisConnector
 import kotlin.random.Random
 
 const val BoosterpackSize = 5
 const val LocationIdBaseIncrease = 3.0
 const val SecondsInFiveMinutes = 300
 const val BoosterpackAmountLimit = 25
+const val RedisKeyBoosterpacks = "boosterpacks"
 
 class StoreService {
+    private val gson = Gson()
+
     fun getAllBoosterpacks(): List<Boosterpack> {
         return PokeApi().client.getLocationList(0, BoosterpackAmountLimit).results.mapNotNull { getSpecificBoosterpack(it.id) }
     }
 
     fun getSpecificBoosterpack(id: Int): Boosterpack? {
+        val cachedValue = RedisConnector().hmget(RedisKeyBoosterpacks, id.toString()).firstOrNull()
+        if (cachedValue != null) return gson.fromJson(cachedValue, Boosterpack::class.java)
+
         val location = PokeApi().getLocation(id)
         val pokemonsInLocation = PokeApi().getPokemonsOfLocation(location)
         if (pokemonsInLocation.isEmpty()) return null
 
         val price = determineBoosterpackPrice(location.id)
 
-        return Boosterpack(
+        val boosterpack = Boosterpack(
             name = capitalizeLocationName(location.name),
             price = price,
             locationId = location.id,
             hexColor = determineHexColorBasedOnLocationId(location.id),
             pokemons = pokemonsInLocation
         )
+
+        RedisConnector().hmset(RedisKeyBoosterpacks, mapOf(id.toString() to gson.toJson(boosterpack)))
+
+        return boosterpack
     }
 
     fun buyBoosterpack(id: Int, user: User): List<model.Pokemon> {
