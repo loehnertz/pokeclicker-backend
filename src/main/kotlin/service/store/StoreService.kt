@@ -78,7 +78,7 @@ class StoreService {
         Users.subtractPokeDollarsFromBalance(user.id, boosterpack.price)
 
         // Update the gather rate of the user
-        BalanceIncreaseRateManager(user).updateIncreaseRate()
+        BalanceIncreaseRateManager(user).updateIncreaseRate(receivedPokemons.sumBy { it.xp }.toLong())
 
         return insertedPokemons
     }

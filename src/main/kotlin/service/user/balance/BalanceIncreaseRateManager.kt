@@ -21,6 +21,10 @@ class BalanceIncreaseRateManager(val user: User) {
         RedisConnector().hmset(RedisHashMapKeyIncreaseRates, mapOf(user.name to increaseRatePerMinute.toString()))
     }
 
+    fun updateIncreaseRate(increaseRateAddition: Long) {
+        RedisConnector().hincrBy(RedisHashMapKeyIncreaseRates, user.name, increaseRateAddition)
+    }
+
     fun retrieveIncreaseRate(): Long? {
         return try {
             RedisConnector().hmget(RedisHashMapKeyIncreaseRates, user.name).firstOrNull()?.toLong()
