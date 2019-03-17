@@ -29,6 +29,7 @@ class PokeApiAdapter {
 
         return item
     }
+
     companion object {
         private val client = PokeApiClient()
     }

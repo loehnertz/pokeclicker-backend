@@ -90,13 +90,14 @@ object TokenManager {
     }
 
     private fun retrieveUsernameByToken(token: String): String? {
-        val redis = RedisFactory.retrieveRedisWritingClient()
+        val redis = RedisFactory.retrieveRedisReadingClient()
 
         val redisUsernameByTokenKey = generateRedisUsernameByTokenKey(token)
+        val username = redis.get(redisUsernameByTokenKey)
 
         redis.close()
 
-        return redis.get(redisUsernameByTokenKey)
+        return username
     }
 
     private fun generateToken(): String {
