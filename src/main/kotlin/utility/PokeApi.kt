@@ -28,6 +28,10 @@ class PokeApi {
         return thinPokemon
     }
 
+    fun getLocationIdList(limit: Int): List<Int> {
+        return client.getLocationList(0, limit).results.map { it.id }
+    }
+
     fun getLocation(id: Int): Location {
         val cachedValue = RedisConnector().hmget(RedisHashMapKeyLocations, id.toString()).firstOrNull()
         if (cachedValue != null) return gson.fromJson(cachedValue, Location::class.java)

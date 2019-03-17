@@ -20,12 +20,19 @@ const val LocationIdBaseIncrease = 3.0
 const val SecondsInFiveMinutes = 300
 const val BoosterpackAmountLimit = 25
 const val RedisKeyBoosterpacks = "boosterpacks"
+const val RedisKeyBoosterpackIds = "boosterpack_ids"
 
 class StoreService {
     private val gson = Gson()
 
     fun getAllBoosterpacks(): List<Boosterpack> {
-        return (1..BoosterpackAmountLimit).mapNotNull { getSpecificBoosterpack(it) }
+        val cachedBoosterpackIds = RedisConnector().smembers(RedisKeyBoosterpackIds)
+        if (cachedBoosterpackIds.size == BoosterpackAmountLimit) return cachedBoosterpackIds.mapNotNull { getSpecificBoosterpack(it.toInt()) }
+
+        val boosterpackIds = PokeApi().getLocationIdList(BoosterpackAmountLimit)
+        RedisConnector().sadd(RedisKeyBoosterpackIds, *boosterpackIds.map { it.toString() }.toTypedArray())
+
+        return boosterpackIds.mapNotNull { getSpecificBoosterpack(it) }
     }
 
     fun getSpecificBoosterpack(id: Int): Boosterpack? {
