@@ -78,7 +78,7 @@ class StoreService {
         Users.subtractPokeDollarsFromBalance(user.id, boosterpack.price)
 
         // Update the gather rate of the user
-        BalanceIncreaseRateManager(user).updateIncreaseRate(receivedPokemons.sumBy { it.xp }.toLong())
+        BalanceIncreaseRateManager(user).updateIncreaseRate(receivedPokemons.map { it.xp }.sum())
 
         return insertedPokemons
     }
@@ -90,7 +90,14 @@ class StoreService {
         sortedPokemons.forEachIndexed { index, pokemon -> repeat(index + 1) { possiblePokemons.add(pokemon) } }
 
         val drawnPokemons = possiblePokemons.shuffled().take(BoosterpackSize)
-        drawnPokemons.forEach { it.xp = Math.ceil((getReasonablyNormallyDistributedDouble() + 1) * boosterpackPrice / (SecondsInFiveMinutes * BoosterpackSize)).toInt() }
+        drawnPokemons.forEach {
+            val xp = Math.ceil((getReasonablyNormallyDistributedDouble() + 1) * boosterpackPrice / (SecondsInFiveMinutes * BoosterpackSize)).toLong()
+            if (xp == 1L && getReasonablyNormallyDistributedDouble() > 0.55) {
+                it.xp = xp + 1L  // Randomly increase XP by one so that the first three booster packs scale better
+            } else {
+                it.xp = xp
+            }
+        }
 
         return drawnPokemons
     }
