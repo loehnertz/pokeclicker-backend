@@ -11,7 +11,7 @@ object Pokemons : Table() {
     val id = integer("id").primaryKey().autoIncrement()
     val pokeNumber = integer("pokeNumber")
     val owner = reference("owner", refColumn = Users.id, onDelete = ReferenceOption.CASCADE)
-    val xp = integer("xp")
+    val xp = long("xp")
     val aquisitionDateTime = datetime("aquisitionDateTime")
 }
 
@@ -19,7 +19,7 @@ data class Pokemon(
     val id: Int,
     val pokeNumber: Int,
     val owner: User? = null,
-    val xp: Int,
+    val xp: Long,
     val aquisitionDateTime: DateTime,
     var fatApiInfo: me.sargunvohra.lib.pokekotlin.model.Pokemon? = null,
     var thinApiInfo: ThinPokemon? = null

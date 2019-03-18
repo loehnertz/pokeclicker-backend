@@ -17,7 +17,7 @@ class PokeApi {
         val thinPokemon = ThinPokemon(
             id = pokemon.id,
             name = pokemon.name.capitalize(),
-            xp = pokemon.baseExperience,
+            xp = pokemon.baseExperience.toLong(),
             sprite = pokemon.sprites.frontDefault ?: pokemon.sprites.frontShiny
         )
 
