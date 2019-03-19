@@ -33,6 +33,9 @@ import service.user.session.SessionSemaphore
 import utility.Scheduler
 import java.util.concurrent.TimeUnit
 
+const val WebSocketResponseBalanceKeyword = "balance"
+const val WebSocketResponseGatherRateKeyword = "rate"
+const val WebSocketResponseLeaderboardKeyword = "leaderboard"
 const val WebSocketClickingKeyword = "click"
 const val WebSocketClosingKeyword = "bye"
 const val WebSocketClickingMessage = "Click successfully received"
@@ -76,16 +79,32 @@ fun Route.user(userService: UserService) {
             }
         }
 
-        get("/pokemon") {
-            try {
-                val user = TokenManager.verifyTokenAndRetrieveUser(call.request.headers)
+        route("/pokemon") {
+            get("/") {
+                try {
+                    val user = TokenManager.verifyTokenAndRetrieveUser(call.request.headers)
 
-                call.respond(userService.getUserPokemon(user.id))
-            } catch (exception: Exception) {
-                when (exception) {
-                    is TokenExpiredException -> call.respond(HttpStatusCode.Unauthorized, exception.message)
-                    is TokenMissingException -> call.respond(HttpStatusCode.Unauthorized, exception.message)
-                    else -> throw exception
+                    call.respond(userService.getUserPokemon(user.id))
+                } catch (exception: Exception) {
+                    when (exception) {
+                        is TokenExpiredException -> call.respond(HttpStatusCode.Unauthorized, exception.message)
+                        is TokenMissingException -> call.respond(HttpStatusCode.Unauthorized, exception.message)
+                        else -> throw exception
+                    }
+                }
+            }
+
+            post("/merge") {
+                try {
+                    val user = TokenManager.verifyTokenAndRetrieveUser(call.request.headers)
+
+                    call.respond(userService.mergeUserPokemon(user, call.receive()))
+                } catch (exception: Exception) {
+                    when (exception) {
+                        is TokenExpiredException -> call.respond(HttpStatusCode.Unauthorized, exception.message)
+                        is TokenMissingException -> call.respond(HttpStatusCode.Unauthorized, exception.message)
+                        else -> call.respond(HttpStatusCode.BadRequest, exception.localizedMessage)
+                    }
                 }
             }
         }
@@ -104,8 +123,11 @@ fun Route.user(userService: UserService) {
 
                         val currentBalance = balanceManager.retrieveCurrentBalance()
                         val currentIncreaseRate = balanceIncreaseRateManager.retrieveIncreaseRate()
+                        val leaderboardAsJson = userService.retrieveLeaderboardAsJson()
 
-                        outgoing.send(Frame.Text("$currentBalance,$currentIncreaseRate"))
+                        outgoing.send(Frame.Text("$WebSocketResponseBalanceKeyword:$currentBalance"))
+                        outgoing.send(Frame.Text("$WebSocketResponseGatherRateKeyword:$currentIncreaseRate"))
+                        outgoing.send(Frame.Text("$WebSocketResponseLeaderboardKeyword:$leaderboardAsJson"))
 
                         delay(TimeUnit.SECONDS.toMillis(Scheduler.BalanceIncreaseTimeoutInSeconds))
                     }

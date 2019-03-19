@@ -19,3 +19,7 @@ data class UserAuthenticationResponse(
     val token: String? = null,
     val tokenExpiryInSeconds: Int = UserTokenExpiryInSeconds
 )
+
+data class UserPokemonMergeRequest(
+    val pokemonIds: List<Int>
+)

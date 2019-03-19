@@ -13,12 +13,14 @@ import service.user.balance.BalanceIncreaseRateManager.Companion.IncreaseRateSca
 import service.user.balance.BalanceManager
 import utility.PokeApi
 import utility.RedisConnector
+import java.math.BigDecimal
+import java.math.RoundingMode.CEILING
 import kotlin.random.Random
 
 const val BoosterpackSize = 5
 const val LocationIdBaseIncrease = 3.0
 const val SecondsInFiveMinutes = 300
-const val BoosterpackAmountLimit = 25
+const val BoosterpackAmountLimit = 55
 const val RedisKeyBoosterpacks = "boosterpacks"
 const val RedisKeyBoosterpackIds = "boosterpack_ids"
 val LegendaryPokemon = intArrayOf(144, 145, 146, 150, 151, 243, 244, 245, 249, 250, 251, 377, 378, 379, 380, 381, 382, 383, 384, 385, 386, 480, 481, 482, 483, 484, 485, 486, 487, 488, 489, 490, 491, 492, 493, 494, 638, 639, 640, 641, 642, 643, 644, 645, 646, 647, 648, 649)
@@ -46,11 +48,9 @@ class StoreService {
         val pokemonsInLocation = PokeApi().getPokemonsOfLocation(location)
         if (pokemonsInLocation.isEmpty()) return null
 
-        val price = determineBoosterpackPrice(location.id)
-
         val boosterpack = Boosterpack(
             name = capitalizeLocationName(location.name),
-            price = price,
+            price = determineBoosterpackPrice(location.id),
             locationId = location.id,
             hexColor = determineHexColorBasedOnLocationId(location.id),
             pokemons = pokemonsInLocation
@@ -81,12 +81,12 @@ class StoreService {
         Users.subtractPokeDollarsFromBalance(user.id, boosterpack.price)
 
         // Update the gather rate of the user
-        BalanceIncreaseRateManager(user).updateIncreaseRate(receivedPokemons.map { it.xp }.sum())
+        BalanceIncreaseRateManager(user).updateIncreaseRate(receivedPokemons.map { it.xp }.fold(BigDecimal(0)) { sum, xp -> sum.add(xp) })
 
         return insertedPokemons
     }
 
-    private fun openBoosterpack(pokemons: List<ThinPokemon>, boosterpackPrice: Long): List<ThinPokemon> {
+    private fun openBoosterpack(pokemons: List<ThinPokemon>, boosterpackPrice: BigDecimal): List<ThinPokemon> {
         val sortedPokemons = pokemons.sortedBy { it.xp }.asReversed()
 
         val possiblePokemons = arrayListOf<ThinPokemon>()
@@ -96,15 +96,17 @@ class StoreService {
 
         val drawnPokemons = possiblePokemons.shuffled().take(BoosterpackSize)
         drawnPokemons.forEach {
-            val xp = Math.ceil((getReasonablyNormallyDistributedDouble() + 1) * boosterpackPrice / (SecondsInFiveMinutes * BoosterpackSize)).toLong()
-            if (xp == 1L && getReasonablyNormallyDistributedDouble() > 0.55) {
-                it.xp = xp + 1L  // Randomly increase XP by one so that the first three booster packs scale better
+            val xp = (boosterpackPrice.multiply((getReasonablyNormallyDistributedDouble() + 1).toBigDecimal()).divide((SecondsInFiveMinutes * BoosterpackSize).toBigDecimal(), CEILING)).setScale(0, CEILING)
+
+            if (xp == BigDecimal(1) && getReasonablyNormallyDistributedDouble() > 0.55) {
+                it.xp = xp + BigDecimal(1)  // Randomly increase XP by one so that the first three booster packs scale better
             } else {
                 it.xp = xp
             }
-			if(LegendaryPokemon.contains(it.id)){ // Legendary pokemon are 10 times as powerful as normal pokemon :)
-				it.xp *= LegendaryPokemonXPMultiplier
-			}
+
+            if (LegendaryPokemon.contains(it.id)) {  // Legendary pokemon are 10 times as powerful as normal pokemon :)
+                it.xp *= LegendaryPokemonXPMultiplier
+            }
         }
 
         return drawnPokemons
@@ -141,8 +143,8 @@ class StoreService {
         return locationName.split("-").joinToString(" ") { it.capitalize() }
     }
 
-    private fun determineBoosterpackPrice(locationId: Int): Long {
-        return (BoosterpackSize * SecondsInFiveMinutes * Math.pow(LocationIdBaseIncrease, (locationId - 1).toDouble()) / IncreaseRateScalingFactor).toLong()
+    private fun determineBoosterpackPrice(locationId: Int): BigDecimal {
+        return (BoosterpackSize * SecondsInFiveMinutes * Math.pow(LocationIdBaseIncrease, (locationId - 1).toDouble()) / IncreaseRateScalingFactor).toBigDecimal()
     }
 
     private fun determineHexColorBasedOnLocationId(locationId: Int): String {

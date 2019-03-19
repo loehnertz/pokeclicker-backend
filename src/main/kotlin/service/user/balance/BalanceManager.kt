@@ -5,18 +5,19 @@ import model.Users
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.update
 import utility.RedisConnector
+import java.math.BigDecimal
 
 class BalanceManager(val user: User) {
-    fun increaseCurrentBalance(increaseAmount: Long = 1) {
-        RedisConnector().hincrBy(RedisKeyUserBalances, user.name, increaseAmount)
+    fun increaseCurrentBalance(increaseAmount: BigDecimal = BigDecimal(1)) {
+        RedisConnector().hincrByFloat(RedisKeyUserBalances, user.name, increaseAmount.toDouble())
     }
 
-    fun decreaseCurrentBalance(decreaseAmount: Long = 1) {
-        RedisConnector().hincrBy(RedisKeyUserBalances, user.name, (decreaseAmount * -1))
+    fun decreaseCurrentBalance(decreaseAmount: BigDecimal = BigDecimal(1)) {
+        RedisConnector().hincrByFloat(RedisKeyUserBalances, user.name, (decreaseAmount.multiply(BigDecimal(-1))).toDouble())
     }
 
-    fun retrieveCurrentBalance(): Long {
-        val currentBalance = RedisConnector().hmget(RedisKeyUserBalances, user.name).firstOrNull()?.toLong()
+    fun retrieveCurrentBalance(): BigDecimal {
+        val currentBalance = RedisConnector().hmget(RedisKeyUserBalances, user.name).firstOrNull()?.toBigDecimal()
 
         return if (currentBalance != null) {
             currentBalance
@@ -34,11 +35,21 @@ class BalanceManager(val user: User) {
         }
     }
 
-    private fun setCurrentBalance(value: Long) {
+    private fun setCurrentBalance(value: BigDecimal) {
         RedisConnector().hmset(RedisKeyUserBalances, mapOf(user.name to value.toString()))
     }
 
     companion object {
-        private const val RedisKeyUserBalances = "balances"
+        const val RedisKeyUserBalances = "balances"
+        private const val LeaderboardSize = 10
+
+        fun retrieveLeaderboard(): Map<String, BigDecimal>? {
+            return RedisConnector().hgetAll(RedisKeyUserBalances)
+                ?.mapValues { it.value.toBigDecimal() }
+                ?.toList()
+                ?.sortedByDescending { it.second }
+                ?.take(LeaderboardSize)
+                ?.toMap()
+        }
     }
 }
