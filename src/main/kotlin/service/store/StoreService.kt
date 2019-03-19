@@ -90,8 +90,7 @@ class StoreService {
         val sortedPokemons = pokemons.sortedBy { it.xp }.asReversed()
 
         val possiblePokemons = arrayListOf<ThinPokemon>()
-		if(Random.nextInt(0, LegendaryPokemonInBoosterPack) == 0)
-			possiblePokemons.add(PokeApi().getPokemon(LegendaryPokemon.random()));
+		if(Random.nextInt(0, LegendaryPokemonInBoosterPack) == 0) possiblePokemons.add(PokeApi().getPokemon(LegendaryPokemon.random()));
         sortedPokemons.forEachIndexed { index, pokemon -> repeat(index + 1) { possiblePokemons.add(pokemon) } }
 
         val drawnPokemons = possiblePokemons.shuffled().take(BoosterpackSize)
