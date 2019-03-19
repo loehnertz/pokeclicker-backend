@@ -1,7 +1,7 @@
 package service.user
 
-import model.Pokemon
 import com.google.gson.Gson
+import model.Pokemon
 import model.Pokemons
 import model.User
 import model.toPokemon

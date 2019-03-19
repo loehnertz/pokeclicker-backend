@@ -8,6 +8,7 @@ import org.jetbrains.exposed.sql.transactions.transaction
 import org.joda.time.DateTime
 import service.user.data.UserPokemonMergeRequest
 import utility.PokeApi
+import java.math.BigDecimal
 import java.util.*
 import kotlin.random.Random
 
@@ -48,9 +49,9 @@ class PokemonMerger(private val user: User) {
         )
     }
 
-    private fun determineExperiencePointsOfNewPokemon(selectedPokemons: List<Pokemon>): Long {
-        val combinedExperiencePoints = selectedPokemons.map { it.xp }.sum()
-        return (combinedExperiencePoints * (Random.nextDouble() + 1)).toLong()
+    private fun determineExperiencePointsOfNewPokemon(selectedPokemons: List<Pokemon>): BigDecimal {
+        val combinedExperiencePoints = selectedPokemons.map { it.xp }.fold(BigDecimal(0)) { sum, xp -> sum.add(xp) }
+        return (combinedExperiencePoints * (Random.nextDouble() + 1).toBigDecimal())
     }
 
     private fun retrieveEvolutionPokemon(selectedPokemons: List<Pokemon>): me.sargunvohra.lib.pokekotlin.model.Pokemon {
