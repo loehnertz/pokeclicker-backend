@@ -100,6 +100,9 @@ class StoreService {
             } else {
                 it.xp = xp
             }
+			if(LegendaryPokemon.contains(it.id)){ // Legendary pokemon are 10 times as powerful as normal pokemon :)
+				it.xp *= 10
+			}
         }
 
         return drawnPokemons
