@@ -33,6 +33,9 @@ import service.user.session.SessionSemaphore
 import utility.Scheduler
 import java.util.concurrent.TimeUnit
 
+const val WebSocketResponseBalanceKeyword = "balance"
+const val WebSocketResponseGatherRateKeyword = "rate"
+const val WebSocketResponseLeaderboardKeyword = "leaderboard"
 const val WebSocketClickingKeyword = "click"
 const val WebSocketClosingKeyword = "bye"
 const val WebSocketClickingMessage = "Click successfully received"
@@ -104,8 +107,11 @@ fun Route.user(userService: UserService) {
 
                         val currentBalance = balanceManager.retrieveCurrentBalance()
                         val currentIncreaseRate = balanceIncreaseRateManager.retrieveIncreaseRate()
+                        val leaderboardAsJson = userService.retrieveLeaderboardAsJson()
 
-                        outgoing.send(Frame.Text("$currentBalance,$currentIncreaseRate"))
+                        outgoing.send(Frame.Text("$WebSocketResponseBalanceKeyword:$currentBalance"))
+                        outgoing.send(Frame.Text("$WebSocketResponseGatherRateKeyword:$currentIncreaseRate"))
+                        outgoing.send(Frame.Text("$WebSocketResponseLeaderboardKeyword:$leaderboardAsJson"))
 
                         delay(TimeUnit.SECONDS.toMillis(Scheduler.BalanceIncreaseTimeoutInSeconds))
                     }
