@@ -1,6 +1,7 @@
 package service.user
 
 import model.Pokemon
+import com.google.gson.Gson
 import model.Pokemons
 import model.User
 import model.toPokemon
@@ -16,6 +17,8 @@ import service.user.data.UserRegistrationRequest
 import service.user.pokemon.PokemonMerger
 
 class UserService {
+    private val gson = Gson()
+
     fun loginUser(loginRequest: UserLoginRequest): UserAuthenticationResponse {
         return Login.loginUser(loginRequest)
     }
@@ -34,5 +37,9 @@ class UserService {
 
     fun buildBalanceManager(user: User): BalanceManager {
         return BalanceManager(user)
+    }
+
+    fun retrieveLeaderboardAsJson(): String {
+        return gson.toJson(BalanceManager.retrieveLeaderboard())
     }
 }

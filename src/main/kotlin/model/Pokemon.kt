@@ -1,3 +1,5 @@
+@file:Suppress("unused")
+
 package model
 
 import org.jetbrains.exposed.sql.ReferenceOption
@@ -6,12 +8,13 @@ import org.jetbrains.exposed.sql.Table
 import org.joda.time.DateTime
 import service.store.data.ThinPokemon
 import utility.PokeApi
+import java.math.BigDecimal
 
 object Pokemons : Table() {
     val id = integer("id").primaryKey().autoIncrement()
     val pokeNumber = integer("pokeNumber")
     val owner = reference("owner", refColumn = Users.id, onDelete = ReferenceOption.CASCADE)
-    val xp = long("xp")
+    val xp = decimal("xp", 55, 0)
     val aquisitionDateTime = datetime("aquisitionDateTime")
 }
 
@@ -19,7 +22,7 @@ data class Pokemon(
     val id: Int,
     val pokeNumber: Int,
     val owner: User? = null,
-    val xp: Long,
+    val xp: BigDecimal,
     val aquisitionDateTime: DateTime,
     var fatApiInfo: me.sargunvohra.lib.pokekotlin.model.Pokemon? = null,
     var thinApiInfo: ThinPokemon? = null
