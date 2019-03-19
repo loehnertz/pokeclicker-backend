@@ -22,8 +22,8 @@ const val BoosterpackAmountLimit = 25
 const val RedisKeyBoosterpacks = "boosterpacks"
 const val RedisKeyBoosterpackIds = "boosterpack_ids"
 val LegendaryPokemon = intArrayOf(144, 145, 146, 150, 151, 243, 244, 245, 249, 250, 251, 377, 378, 379, 380, 381, 382, 383, 384, 385, 386, 480, 481, 482, 483, 484, 485, 486, 487, 488, 489, 490, 491, 492, 493, 494, 638, 639, 640, 641, 642, 643, 644, 645, 646, 647, 648, 649)
-const val LegendaryPokemonXPMultiplier = 10
-const val LegendaryPokemonInBoosterPack = 100 //Once every LegendaryPokemonInBoosterPack times there is a legendary pokemon in a booster pack
+const val LegendaryPokemonXPMultiplier = 15
+const val LegendaryPokemonInBoosterPack = 6 //Once every LegendaryPokemonInBoosterPack times there is a legendary pokemon in a booster pack. Please note that this doesn't mean that you'll also draw this pokemon.
 
 class StoreService {
     private val gson = Gson()
@@ -90,7 +90,7 @@ class StoreService {
         val sortedPokemons = pokemons.sortedBy { it.xp }.asReversed()
 
         val possiblePokemons = arrayListOf<ThinPokemon>()
-		if(Random.nextInt(0, LegendaryPokemonInBoosterPack) == 0) //Once every 100 booster packs there is a legendary in it!
+		if(Random.nextInt(0, LegendaryPokemonInBoosterPack) == 0)
 			possiblePokemons.add(PokeApi().getPokemon(LegendaryPokemon.random()));
         sortedPokemons.forEachIndexed { index, pokemon -> repeat(index + 1) { possiblePokemons.add(pokemon) } }
 
