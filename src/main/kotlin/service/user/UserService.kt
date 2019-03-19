@@ -1,5 +1,6 @@
 package service.user
 
+import model.Pokemon
 import com.google.gson.Gson
 import model.Pokemons
 import model.User
@@ -11,7 +12,9 @@ import service.user.authentication.Registration
 import service.user.balance.BalanceManager
 import service.user.data.UserAuthenticationResponse
 import service.user.data.UserLoginRequest
+import service.user.data.UserPokemonMergeRequest
 import service.user.data.UserRegistrationRequest
+import service.user.pokemon.PokemonMerger
 
 class UserService {
     private val gson = Gson()
@@ -24,8 +27,12 @@ class UserService {
         return Registration.registerUser(registrationRequest)
     }
 
-    fun getUserPokemon(userId: Int): List<model.Pokemon> {
+    fun getUserPokemon(userId: Int): List<Pokemon> {
         return transaction { Pokemons.select { Pokemons.owner eq userId }.map { Pokemons.toPokemon(it) } }
+    }
+
+    fun mergeUserPokemon(user: User, mergeRequest: UserPokemonMergeRequest): Pokemon {
+        return PokemonMerger(user).mergePokemons(mergeRequest)
     }
 
     fun buildBalanceManager(user: User): BalanceManager {

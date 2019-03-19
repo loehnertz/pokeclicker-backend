@@ -79,16 +79,32 @@ fun Route.user(userService: UserService) {
             }
         }
 
-        get("/pokemon") {
-            try {
-                val user = TokenManager.verifyTokenAndRetrieveUser(call.request.headers)
+        route("/pokemon") {
+            get("/") {
+                try {
+                    val user = TokenManager.verifyTokenAndRetrieveUser(call.request.headers)
 
-                call.respond(userService.getUserPokemon(user.id))
-            } catch (exception: Exception) {
-                when (exception) {
-                    is TokenExpiredException -> call.respond(HttpStatusCode.Unauthorized, exception.message)
-                    is TokenMissingException -> call.respond(HttpStatusCode.Unauthorized, exception.message)
-                    else -> throw exception
+                    call.respond(userService.getUserPokemon(user.id))
+                } catch (exception: Exception) {
+                    when (exception) {
+                        is TokenExpiredException -> call.respond(HttpStatusCode.Unauthorized, exception.message)
+                        is TokenMissingException -> call.respond(HttpStatusCode.Unauthorized, exception.message)
+                        else -> throw exception
+                    }
+                }
+            }
+
+            post("/merge") {
+                try {
+                    val user = TokenManager.verifyTokenAndRetrieveUser(call.request.headers)
+
+                    call.respond(userService.mergeUserPokemon(user, call.receive()))
+                } catch (exception: Exception) {
+                    when (exception) {
+                        is TokenExpiredException -> call.respond(HttpStatusCode.Unauthorized, exception.message)
+                        is TokenMissingException -> call.respond(HttpStatusCode.Unauthorized, exception.message)
+                        else -> call.respond(HttpStatusCode.BadRequest, exception.localizedMessage)
+                    }
                 }
             }
         }
