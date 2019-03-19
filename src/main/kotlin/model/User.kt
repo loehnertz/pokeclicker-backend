@@ -9,6 +9,7 @@ import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.update
 import service.user.balance.BalanceManager
+import java.math.BigDecimal
 
 object Users : Table() {
     val id = integer("id").primaryKey().autoIncrement()
@@ -16,7 +17,7 @@ object Users : Table() {
     val email = varchar("email", 511).uniqueIndex()
     val password = varchar("password", 255)
     val avatarUri = varchar("avatarUri", 511).nullable()
-    val pokeDollars = long("pokeDollars").default(0)
+    val pokeDollars = decimal("pokeDollars", 55, 0).default(BigDecimal(0))
 }
 
 data class User(
@@ -25,7 +26,7 @@ data class User(
     val email: String,
     val password: String,
     val avatarUri: String? = null,
-    val pokeDollars: Long
+    val pokeDollars: BigDecimal
 )
 
 fun Users.toUser(row: ResultRow): User {
@@ -59,7 +60,7 @@ fun Users.getPokemons(userId: Int): List<Pokemon> {
     return transaction { Pokemons.select { Pokemons.owner eq userId }.map { Pokemons.toPokemon(it) } }
 }
 
-fun Users.subtractPokeDollarsFromBalance(userId: Int, amountToSubtract: Long): Long {
+fun Users.subtractPokeDollarsFromBalance(userId: Int, amountToSubtract: BigDecimal): BigDecimal {
     val user = Users.getUser(userId)
 
     transaction {
