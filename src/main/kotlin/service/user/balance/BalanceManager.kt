@@ -40,6 +40,10 @@ class BalanceManager(val user: User) {
     }
 
     companion object {
-        private const val RedisKeyUserBalances = "balances"
+        const val RedisKeyUserBalances = "balances"
+
+        fun retrieveLeaderboard(): Map<String, BigDecimal>? {
+            return RedisConnector().hgetAll(RedisKeyUserBalances)?.mapValues { it.value.toBigDecimal() }?.toList()?.sortedByDescending { it.second }?.toMap()
+        }
     }
 }
