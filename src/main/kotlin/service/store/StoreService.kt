@@ -98,7 +98,8 @@ class StoreService {
 
         val drawnPokemons = possiblePokemons.shuffled().take(BoosterpackSize)
         drawnPokemons.forEach {
-            val xp = boosterpackPrice.multiply((getReasonablyNormallyDistributedDouble() + 1).toBigDecimal()).divide((SecondsInFiveMinutes * BoosterpackSize).toBigDecimal()).setScale(0, CEILING)
+            val xp = (boosterpackPrice.multiply((getReasonablyNormallyDistributedDouble() + 1).toBigDecimal()).divide((SecondsInFiveMinutes * BoosterpackSize).toBigDecimal(), CEILING)).setScale(0, CEILING)
+
             if (xp == BigDecimal(1) && getReasonablyNormallyDistributedDouble() > 0.55) {
                 it.xp = xp + BigDecimal(1)  // Randomly increase XP by one so that the first three booster packs scale better
             } else {

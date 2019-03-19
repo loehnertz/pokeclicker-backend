@@ -38,7 +38,7 @@ class BalanceIncreaseRateManager(val user: User) {
 
     private fun calculateIncreaseRatePerSecond(): BigDecimal {
         val pokemons = Users.getPokemons(user.id)
-        return (pokemons.fold(BigDecimal(0)) { sum, pokemon -> sum.add(pokemon.xp) }.divide(IncreaseRateScalingFactor.toBigDecimal())).setScale(0, CEILING)
+        return (pokemons.fold(BigDecimal(0)) { sum, pokemon -> sum.add(pokemon.xp) }.divide(IncreaseRateScalingFactor.toBigDecimal(), CEILING)).setScale(0, CEILING)
     }
 
     companion object {
