@@ -31,7 +31,7 @@ The application should now be accessible under: `http://localhost:${backend_port
 
 ## Remarks about the environment variables
 
-- The variables `db_host` and `redis_host` are directly mapped to `docker-compose`
+- The variables `db_host`, `redis_master_host`, and `redis_slave_host` are directly mapped to `docker-compose`
 services. Thus, the chosen names in the `docker-compose.yml` strictly have to match those two variables.
 - The variables `backend_port`, `db_port`, and `redis_port` are also used 
 to expose the respective services to your host machine.
