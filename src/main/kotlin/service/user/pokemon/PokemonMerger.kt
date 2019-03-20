@@ -2,8 +2,10 @@ package service.user.pokemon
 
 import me.sargunvohra.lib.pokekotlin.client.PokeApiClient
 import model.*
+import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.insert
+import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.joda.time.DateTime
 import service.user.data.UserPokemonMergeRequest
@@ -17,7 +19,7 @@ class PokemonMerger(private val user: User) {
         val pokemonsOfUser = Users.getPokemons(user.id)
         val selectedPokemons = pokemonsOfUser.filter { mergeRequest.pokemonIds.contains(it.id) }
 
-        checkValidity(selectedPokemons, pokemonsOfUser, mergeRequest)
+        checkValidity(selectedPokemons)
 
         val evolutionPokemon = retrieveEvolutionPokemon(selectedPokemons)
 
@@ -63,10 +65,15 @@ class PokemonMerger(private val user: User) {
         return client.getPokemon(evolutionPokemonSpecies.varieties.first().pokemon.id)
     }
 
-    private fun checkValidity(selectedPokemons: List<Pokemon>, pokemonsOfUser: List<Pokemon>, mergeRequest: UserPokemonMergeRequest) {
+    private fun checkValidity(selectedPokemons: List<Pokemon>) {
         if (selectedPokemons.size < minimumMergeAmount) throw IllegalArgumentException("You need to selct at least $minimumMergeAmount Pokémon")
-        if (!pokemonsOfUser.map { it.id }.containsAll(mergeRequest.pokemonIds)) throw IllegalAccessException("The given IDs are not all owned by the user")
         if (selectedPokemons.map { it.pokeNumber }.toSet().size > 1) throw IllegalArgumentException("The selected Pokemon are not all the same")
+        checkIfUserOwnsSelectedPokemons(selectedPokemons)
+    }
+
+    private fun checkIfUserOwnsSelectedPokemons(selectedPokemons: List<Pokemon>) {
+        val validSelectedPokemonCount = transaction { Pokemons.select { (Pokemons.id inList selectedPokemons.map { it.id }) and (Pokemons.owner eq user.id) }.count() }
+        if (validSelectedPokemonCount != selectedPokemons.size) throw IllegalAccessException("The given IDs are not all owned by the user")
     }
 
     companion object {
