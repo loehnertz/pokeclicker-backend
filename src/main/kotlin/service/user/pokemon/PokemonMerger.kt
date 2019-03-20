@@ -2,25 +2,28 @@ package service.user.pokemon
 
 import com.google.gson.Gson
 import me.sargunvohra.lib.pokekotlin.client.PokeApiClient
-import model.*
-import org.jetbrains.exposed.sql.and
+import model.Pokemon
+import model.Pokemons
+import model.User
+import model.toPokemon
 import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.joda.time.DateTime
 import service.store.data.ThinPokemon
+import service.user.balance.BalanceIncreaseRateManager
 import service.user.data.UserPokemonMergeRequest
 import utility.PokeApi
 import utility.RedisConnector
 import java.math.BigDecimal
+import java.math.RoundingMode.CEILING
 import java.util.*
 import kotlin.random.Random
 
 class PokemonMerger(private val user: User) {
     fun mergePokemons(mergeRequest: UserPokemonMergeRequest): Pokemon {
-        val pokemonsOfUser = Users.getPokemons(user.id)
-        val selectedPokemons = pokemonsOfUser.filter { mergeRequest.pokemonIds.contains(it.id) }
+        val selectedPokemons = retrieveUserPokemons(mergeRequest.pokemonIds)
 
         checkValidity(selectedPokemons)
 
@@ -29,8 +32,19 @@ class PokemonMerger(private val user: User) {
         return removeMergedPokemonAndGiveNewOneToUser(selectedPokemons, evolutionPokemon)
     }
 
+    private fun retrieveUserPokemons(pokemonIds: List<Int>): List<Pokemon> {
+        val selectedPokemons = arrayListOf<Pokemon>()
+
+        pokemonIds.forEach {
+            selectedPokemons.add(Pokemons.toPokemon(transaction { Pokemons.select { Pokemons.id eq it }.first() }))
+        }
+
+        return selectedPokemons
+    }
+
     private fun removeMergedPokemonAndGiveNewOneToUser(selectedPokemons: List<Pokemon>, evolutionPokemon: ThinPokemon): Pokemon {
-        val experiencePointsOfNewPokemon = determineExperiencePointsOfNewPokemon(selectedPokemons)
+        val combinedExperiencePoints = calculateCombinedExperiencePointsOfSelectedPokemons(selectedPokemons)
+        val experiencePointsOfNewPokemon = determineExperiencePointsOfNewPokemon(combinedExperiencePoints)
 
         val insertedPokemon = transaction {
             Pokemons.insert {
@@ -45,6 +59,8 @@ class PokemonMerger(private val user: User) {
             selectedPokemons.forEach { Pokemons.deleteWhere { Pokemons.id eq it.id } }
         }
 
+        BalanceIncreaseRateManager(user).updateIncreaseRate(experiencePointsOfNewPokemon - combinedExperiencePoints)
+
         return model.Pokemon(
             id = insertedPokemon.resultedValues!!.first()[Pokemons.id],
             pokeNumber = evolutionPokemon.id,
@@ -54,9 +70,12 @@ class PokemonMerger(private val user: User) {
         )
     }
 
-    private fun determineExperiencePointsOfNewPokemon(selectedPokemons: List<Pokemon>): BigDecimal {
-        val combinedExperiencePoints = selectedPokemons.map { it.xp }.fold(BigDecimal(0)) { sum, xp -> sum.add(xp) }
-        return (combinedExperiencePoints * (Random.nextDouble() + 1).toBigDecimal())
+    private fun calculateCombinedExperiencePointsOfSelectedPokemons(selectedPokemons: List<Pokemon>): BigDecimal {
+        return selectedPokemons.map { it.xp }.fold(BigDecimal(0)) { sum, xp -> sum.add(xp) }
+    }
+
+    private fun determineExperiencePointsOfNewPokemon(combinedExperiencePoints: BigDecimal): BigDecimal {
+        return (combinedExperiencePoints * (Random.nextDouble() + 1).toBigDecimal()).setScale(0, CEILING)
     }
 
     private fun retrieveEvolutionPokemon(selectedPokemon: Pokemon): ThinPokemon {
@@ -85,12 +104,7 @@ class PokemonMerger(private val user: User) {
     private fun checkValidity(selectedPokemons: List<Pokemon>) {
         if (selectedPokemons.size < minimumMergeAmount) throw IllegalArgumentException("You need to selct at least $minimumMergeAmount Pokémon")
         if (selectedPokemons.map { it.pokeNumber }.toSet().size > 1) throw IllegalArgumentException("The selected Pokemon are not all the same")
-        checkIfUserOwnsSelectedPokemons(selectedPokemons)
-    }
-
-    private fun checkIfUserOwnsSelectedPokemons(selectedPokemons: List<Pokemon>) {
-        val validSelectedPokemonCount = transaction { Pokemons.select { (Pokemons.id inList selectedPokemons.map { it.id }) and (Pokemons.owner eq user.id) }.count() }
-        if (validSelectedPokemonCount != selectedPokemons.size) throw IllegalAccessException("The given IDs are not all owned by the user")
+        if (!selectedPokemons.all { it.owner!!.name == user.name }) throw IllegalAccessException("The given IDs are not all owned by the user")
     }
 
     companion object {
