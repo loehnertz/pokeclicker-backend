@@ -66,7 +66,7 @@ class PokemonMerger(private val user: User) {
     private fun checkValidity(selectedPokemons: List<Pokemon>, pokemonsOfUser: List<Pokemon>, mergeRequest: UserPokemonMergeRequest) {
         if (selectedPokemons.size < minimumMergeAmount) throw IllegalArgumentException("You need to selct at least $minimumMergeAmount Pokémon")
         if (!pokemonsOfUser.map { it.id }.containsAll(mergeRequest.pokemonIds)) throw IllegalAccessException("The given IDs are not all owned by the user")
-        if (selectedPokemons.map { it.id }.toSet().size > 1) throw IllegalArgumentException("The selected Pokemon are not all the same")
+        if (selectedPokemons.map { it.pokeNumber }.toSet().size > 1) throw IllegalArgumentException("The selected Pokemon are not all the same")
     }
 
     companion object {
