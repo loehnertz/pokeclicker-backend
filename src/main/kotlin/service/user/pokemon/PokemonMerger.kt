@@ -77,7 +77,7 @@ class PokemonMerger(private val user: User) {
             sprite = evolutionPokemon.sprites.frontDefault ?: evolutionPokemon.sprites.frontShiny
         )
 
-        RedisConnector().hmset(RedisKeyEvolutions, mapOf(thinPokemon.id.toString() to gson.toJson(thinPokemon)))
+        RedisConnector().hmset(RedisKeyEvolutions, mapOf(selectedPokemon.pokeNumber.toString() to gson.toJson(thinPokemon)))
 
         return thinPokemon
     }
