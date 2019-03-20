@@ -20,7 +20,7 @@ import kotlin.random.Random
 const val BoosterpackSize = 5
 const val LocationIdBaseIncrease = 3.0
 const val SecondsInFiveMinutes = 300
-const val BoosterpackAmountLimit = 55
+const val BoosterpackAmountLimit = 115
 const val RedisKeyBoosterpacks = "boosterpacks"
 const val RedisKeyBoosterpackIds = "boosterpack_ids"
 val LegendaryPokemon = intArrayOf(144, 145, 146, 150, 151, 243, 244, 245, 249, 250, 251, 377, 378, 379, 380, 381, 382, 383, 384, 385, 386, 480, 481, 482, 483, 484, 485, 486, 487, 488, 489, 490, 491, 492, 493, 494, 638, 639, 640, 641, 642, 643, 644, 645, 646, 647, 648, 649)

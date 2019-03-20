@@ -1,5 +1,6 @@
 package service.user.pokemon
 
+import com.google.gson.Gson
 import me.sargunvohra.lib.pokekotlin.client.PokeApiClient
 import model.*
 import org.jetbrains.exposed.sql.and
@@ -10,6 +11,7 @@ import org.jetbrains.exposed.sql.transactions.transaction
 import org.joda.time.DateTime
 import service.user.data.UserPokemonMergeRequest
 import utility.PokeApi
+import utility.RedisConnector
 import java.math.BigDecimal
 import java.util.*
 import kotlin.random.Random
@@ -21,7 +23,7 @@ class PokemonMerger(private val user: User) {
 
         checkValidity(selectedPokemons)
 
-        val evolutionPokemon = retrieveEvolutionPokemon(selectedPokemons)
+        val evolutionPokemon = retrieveEvolutionPokemon(selectedPokemons.first())
 
         return removeMergedPokemonAndGiveNewOneToUser(selectedPokemons, evolutionPokemon)
     }
@@ -56,13 +58,20 @@ class PokemonMerger(private val user: User) {
         return (combinedExperiencePoints * (Random.nextDouble() + 1).toBigDecimal())
     }
 
-    private fun retrieveEvolutionPokemon(selectedPokemons: List<Pokemon>): me.sargunvohra.lib.pokekotlin.model.Pokemon {
-        val pokemonSpecies = client.getPokemon(selectedPokemons.first().pokeNumber).species
+    private fun retrieveEvolutionPokemon(selectedPokemon: Pokemon): me.sargunvohra.lib.pokekotlin.model.Pokemon {
+        val cachedValue = RedisConnector().hmget(RedisKeyEvolutions, selectedPokemon.pokeNumber.toString()).firstOrNull()
+        if (cachedValue != null) return gson.fromJson(cachedValue, me.sargunvohra.lib.pokekotlin.model.Pokemon::class.java)
+
+        val pokemonSpecies = client.getPokemon(selectedPokemon.pokeNumber).species
         val pokemonEvolutionChain = client.getPokemonSpecies(pokemonSpecies.id).evolutionChain
         val evolvesIntoPokemon = client.getEvolutionChain(pokemonEvolutionChain.id).chain.evolvesTo.firstOrNull()
             ?: throw NoSuchElementException("The selected Pokémon are the last link of their evolution chain")
         val evolutionPokemonSpecies = client.getPokemonSpecies(evolvesIntoPokemon.species.id)
-        return client.getPokemon(evolutionPokemonSpecies.varieties.first().pokemon.id)
+        val evolutionPokemon = client.getPokemon(evolutionPokemonSpecies.varieties.first().pokemon.id)
+
+        RedisConnector().hmset(RedisKeyEvolutions, mapOf(selectedPokemon.pokeNumber.toString() to gson.toJson(evolutionPokemon)))
+
+        return evolutionPokemon
     }
 
     private fun checkValidity(selectedPokemons: List<Pokemon>) {
@@ -77,7 +86,9 @@ class PokemonMerger(private val user: User) {
     }
 
     companion object {
+        private val gson = Gson()
         private val client = PokeApiClient()
         private const val minimumMergeAmount = 3
+        const val RedisKeyEvolutions = "evolutions"
     }
 }
