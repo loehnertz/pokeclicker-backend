@@ -90,10 +90,9 @@ class StoreService {
         val sortedPokemons = pokemons.sortedBy { it.xp }.asReversed()
 
         val possiblePokemons = arrayListOf<ThinPokemon>()
-		if(Random.nextInt(0, LegendaryPokemonInBoosterPack) == 0) possiblePokemons.add(PokeApi().getPokemon(LegendaryPokemon.random()));
         sortedPokemons.forEachIndexed { index, pokemon -> repeat(index + 1) { possiblePokemons.add(pokemon) } }
 
-        val drawnPokemons = possiblePokemons.shuffled().take(BoosterpackSize)
+        val drawnPokemons = possiblePokemons.shuffled().map { pkmn -> if (Random.nextInt(0, LegendaryPokemonInBoosterPack) == 0) PokeApi().getPokemon(LegendaryPokemon.random()) else pkmn }.take(BoosterpackSize)
         drawnPokemons.forEach {
             val xp = (boosterpackPrice.multiply((getReasonablyNormallyDistributedDouble() + 1).toBigDecimal()).divide((SecondsInFiveMinutes * BoosterpackSize).toBigDecimal(), CEILING)).setScale(0, CEILING)
 
@@ -103,7 +102,7 @@ class StoreService {
                 it.xp = xp
             }
 
-            if (LegendaryPokemon.contains(it.id)) {  // Legendary pokemon are 10 times as powerful as normal pokemon :)
+            if (LegendaryPokemon.contains(it.id)) {  // Legendary pokemon are LegendaryPokemonXPMultiplier times as powerful as normal pokemon :)
                 it.xp *= LegendaryPokemonXPMultiplier
             }
         }
