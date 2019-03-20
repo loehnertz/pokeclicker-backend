@@ -9,6 +9,7 @@ import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.joda.time.DateTime
+import service.store.data.ThinPokemon
 import service.user.data.UserPokemonMergeRequest
 import utility.PokeApi
 import utility.RedisConnector
@@ -28,7 +29,7 @@ class PokemonMerger(private val user: User) {
         return removeMergedPokemonAndGiveNewOneToUser(selectedPokemons, evolutionPokemon)
     }
 
-    private fun removeMergedPokemonAndGiveNewOneToUser(selectedPokemons: List<Pokemon>, evolutionPokemon: me.sargunvohra.lib.pokekotlin.model.Pokemon): Pokemon {
+    private fun removeMergedPokemonAndGiveNewOneToUser(selectedPokemons: List<Pokemon>, evolutionPokemon: ThinPokemon): Pokemon {
         val experiencePointsOfNewPokemon = determineExperiencePointsOfNewPokemon(selectedPokemons)
 
         val insertedPokemon = transaction {
@@ -58,9 +59,9 @@ class PokemonMerger(private val user: User) {
         return (combinedExperiencePoints * (Random.nextDouble() + 1).toBigDecimal())
     }
 
-    private fun retrieveEvolutionPokemon(selectedPokemon: Pokemon): me.sargunvohra.lib.pokekotlin.model.Pokemon {
+    private fun retrieveEvolutionPokemon(selectedPokemon: Pokemon): ThinPokemon {
         val cachedValue = RedisConnector().hmget(RedisKeyEvolutions, selectedPokemon.pokeNumber.toString()).firstOrNull()
-        if (cachedValue != null) return gson.fromJson(cachedValue, me.sargunvohra.lib.pokekotlin.model.Pokemon::class.java)
+        if (cachedValue != null) return gson.fromJson(cachedValue, ThinPokemon::class.java)
 
         val pokemonSpecies = client.getPokemon(selectedPokemon.pokeNumber).species
         val pokemonEvolutionChain = client.getPokemonSpecies(pokemonSpecies.id).evolutionChain
@@ -69,9 +70,16 @@ class PokemonMerger(private val user: User) {
         val evolutionPokemonSpecies = client.getPokemonSpecies(evolvesIntoPokemon.species.id)
         val evolutionPokemon = client.getPokemon(evolutionPokemonSpecies.varieties.first().pokemon.id)
 
-        RedisConnector().hmset(RedisKeyEvolutions, mapOf(selectedPokemon.pokeNumber.toString() to gson.toJson(evolutionPokemon)))
+        val thinPokemon = ThinPokemon(
+            id = evolutionPokemon.id,
+            name = evolutionPokemon.name.capitalize(),
+            xp = evolutionPokemon.baseExperience.toBigDecimal(),
+            sprite = evolutionPokemon.sprites.frontDefault ?: evolutionPokemon.sprites.frontShiny
+        )
 
-        return evolutionPokemon
+        RedisConnector().hmset(RedisKeyEvolutions, mapOf(thinPokemon.id.toString() to gson.toJson(thinPokemon)))
+
+        return thinPokemon
     }
 
     private fun checkValidity(selectedPokemons: List<Pokemon>) {
