@@ -2,6 +2,8 @@ package service.user.pokemon
 
 import com.google.gson.Gson
 import me.sargunvohra.lib.pokekotlin.client.PokeApiClient
+import me.sargunvohra.lib.pokekotlin.model.ChainLink
+import me.sargunvohra.lib.pokekotlin.model.PokemonSpecies
 import model.Pokemon
 import model.Pokemons
 import model.User
@@ -82,12 +84,7 @@ class PokemonMerger(private val user: User) {
         val cachedValue = RedisConnector().hmget(RedisKeyEvolutions, selectedPokemon.pokeNumber.toString()).firstOrNull()
         if (cachedValue != null) return gson.fromJson(cachedValue, ThinPokemon::class.java)
 
-        val pokemonSpecies = client.getPokemon(selectedPokemon.pokeNumber).species
-        val pokemonEvolutionChain = client.getPokemonSpecies(pokemonSpecies.id).evolutionChain
-        val evolvesIntoPokemon = client.getEvolutionChain(pokemonEvolutionChain.id).chain.evolvesTo.firstOrNull()
-            ?: throw NoSuchElementException("The selected Pokémon are the last link of their evolution chain")
-        val evolutionPokemonSpecies = client.getPokemonSpecies(evolvesIntoPokemon.species.id)
-        val evolutionPokemon = client.getPokemon(evolutionPokemonSpecies.varieties.first().pokemon.id)
+        val evolutionPokemon = retrieveNonCachedEvolutionPokemon(selectedPokemon)
 
         val thinPokemon = ThinPokemon(
             id = evolutionPokemon.id,
@@ -99,6 +96,25 @@ class PokemonMerger(private val user: User) {
         RedisConnector().hmset(RedisKeyEvolutions, mapOf(selectedPokemon.pokeNumber.toString() to gson.toJson(thinPokemon)))
 
         return thinPokemon
+    }
+
+    private fun retrieveNonCachedEvolutionPokemon(selectedPokemon: Pokemon): me.sargunvohra.lib.pokekotlin.model.Pokemon {
+        val pokemonSpecies = client.getPokemon(selectedPokemon.pokeNumber).species
+        val pokemonEvolutionChain = client.getPokemonSpecies(pokemonSpecies.id).evolutionChain
+        val pokemonEvolutionSpecies = traverseEvolutionChain(client.getEvolutionChain(pokemonEvolutionChain.id).chain, selectedPokemon)
+        return client.getPokemon(pokemonEvolutionSpecies.varieties.first().pokemon.id)
+    }
+
+    private fun traverseEvolutionChain(chain: ChainLink, selectedPokemon: Pokemon): PokemonSpecies {
+        var evolvesInto = chain.evolvesTo.firstOrNull()
+            ?: throw NoSuchElementException("The selected Pokémon are the last link of their evolution chain")
+
+        while (evolvesInto.species.name == selectedPokemon.thinApiInfo!!.name.toLowerCase()) {
+            evolvesInto = evolvesInto.evolvesTo.firstOrNull()
+                ?: throw NoSuchElementException("The selected Pokémon are the last link of their evolution chain")
+        }
+
+        return client.getPokemonSpecies(evolvesInto.species.id)
     }
 
     private fun checkValidity(selectedPokemons: List<Pokemon>) {
