@@ -19,12 +19,13 @@ class BalanceIncreaseRateManager(val user: User) {
     }
 
     fun updateIncreaseRate() {
-        val increaseRatePerMinute = calculateIncreaseRatePerSecond()
-        RedisConnector().hmset(RedisHashMapKeyIncreaseRates, mapOf(user.name to increaseRatePerMinute.toString()))
+        val increaseRatePerSecond = retrieveTotalExperiencePoints().divide(IncreaseRateScalingFactor.toBigDecimal(), CEILING)).setScale(0, CEILING)
+        RedisConnector().hmset(RedisHashMapKeyIncreaseRates, mapOf(user.name to increaseRatePerSecond.toString()))
     }
 
-    fun updateIncreaseRate(increaseRateAddition: BigDecimal) {
-        RedisConnector().hincrByFloat(RedisHashMapKeyIncreaseRates, user.name, increaseRateAddition.toDouble())
+    fun updateIncreaseRate(experiencePointsIncrease: BigDecimal) {
+        val increaseRatePerSecondAddition = experiencePointsIncrease.divide(IncreaseRateScalingFactor.toBigDecimal(), CEILING).setScale(0, CEILING)
+        RedisConnector().hincrByFloat(RedisHashMapKeyIncreaseRates, user.name, increaseRatePerSecondAddition.toDouble())
     }
 
     fun retrieveIncreaseRate(): BigDecimal? {
@@ -36,9 +37,9 @@ class BalanceIncreaseRateManager(val user: User) {
         }
     }
 
-    private fun calculateIncreaseRatePerSecond(): BigDecimal {
+    private fun retrieveTotalExperiencePoints(): BigDecimal {
         val pokemons = Users.getPokemons(user.id)
-        return (pokemons.fold(BigDecimal(0)) { sum, pokemon -> sum.add(pokemon.xp) }.divide(IncreaseRateScalingFactor.toBigDecimal(), CEILING)).setScale(0, CEILING)
+        return pokemons.fold(BigDecimal(0)) { sum, pokemon -> sum.add(pokemon.xp) }
     }
 
     companion object {
