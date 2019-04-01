@@ -39,3 +39,5 @@ pockeclicker.iml
 # Environment variables
 .env
 secrets
+
+\.secrets
