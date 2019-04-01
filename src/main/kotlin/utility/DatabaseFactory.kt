@@ -25,7 +25,7 @@ object DatabaseFactory {
         val config = HikariConfig()
 
         config.driverClassName = "com.mysql.cj.jdbc.Driver"
-        config.jdbcUrl = "jdbc:mysql://$databaseHost:$databasePort/$databaseName"
+        config.jdbcUrl = "jdbc:mysql://$databaseHost:$databasePort/$databaseName?serverTimezone=UTC"
         config.username = databaseUser
         config.password = databasePassword
         config.validate()

@@ -1,5 +1,7 @@
 package main
 
+import ch.vorburger.mariadb4j.DB
+import ch.vorburger.mariadb4j.DBConfigurationBuilder
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.joda.JodaModule
 import io.ktor.application.Application
@@ -24,6 +26,7 @@ import service.store.StoreService
 import service.user.UserService
 import utility.DatabaseFactory
 import utility.ErrorLogger
+import java.io.File
 
 fun Application.module() {
     install(DefaultHeaders)
@@ -61,10 +64,30 @@ fun Application.module() {
 }
 
 fun main() {
-    embeddedServer(
-        factory = Netty,
-        port = System.getenv("backend_port").toInt(),
-        watchPaths = listOf("MainKt"),
-        module = Application::module
-    ).start()
+	val db = startDatabase();
+	try{
+	    embeddedServer(
+	        factory = Netty,
+	        port = System.getenv("backend_port").toInt(),
+	        watchPaths = listOf("MainKt"),
+	        module = Application::module
+	    ).start()
+	} catch (e: Exception) {
+		db.stop()
+	}
+}
+
+fun startDatabase() : DB {
+	val configBuilder = DBConfigurationBuilder.newBuilder();
+	configBuilder.setPort(3307); // PLEASE COMMENT THIS LINE IN PRODUCTION ENVIRONMENTS!!
+	configBuilder.setDatabaseVersion("mariadb-10.2.11");
+	val dbLoc = File("/home/simon/.pokeclicker/database");
+	dbLoc.mkdirs();
+	configBuilder.setDataDir(dbLoc.absolutePath); 
+	var db = DB.newEmbeddedDB(configBuilder.build());
+	db.start();
+	if(!File("/home/simon/.pokeclicker/database/Selenium").exists())
+		db.createDB("pokeclicker");
+	System.out.println("Started database at port: "+db.getConfiguration().getPort());
+	return db;
 }
